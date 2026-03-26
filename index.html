@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione PLE - Piattaforma di Lavoro Elevato</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>Gestione PLE</h1>
+            <p class="subtitle">Piattaforma di Lavoro Elevato</p>
+        </header>
+
+        <!-- Login Section -->
+        <section id="login-section" class="section">
+            <div class="login-card">
+                <h2>Accesso</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required placeholder="Inserisci la tua email">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="Inserisci la tua password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Accedi</button>
+                </form>
+                <div id="login-error" class="error-message"></div>
+            </div>
+        </section>
+
+        <!-- Home Section (Dashboard) -->
+        <section id="home-section" class="section hidden">
+            <div class="user-info">
+                <p>Benvenuto, <span id="user-email"></span></p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Nuovo Contratto -->
+                <button class="dashboard-card" onclick="app.showSection('new-contract')">
+                    <div class="card-icon">📝</div>
+                    <h3>Nuovo Contratto</h3>
+                    <p>Crea un nuovo contratto di noleggio PLE</p>
+                </button>
+
+                <!-- Checklist Verifica -->
+                <button class="dashboard-card" onclick="app.showSection('checklist')">
+                    <div class="card-icon">✅</div>
+                    <h3>Verifica PLE</h3>
+                    <p>Esegui la checklist di controllo con foto</p>
+                </button>
+
+                <!-- Consulta Contratti -->
+                <button class="dashboard-card" onclick="app.showSection('contracts')">
+                    <div class="card-icon">📋</div>
+                    <h3>Contratti</h3>
+                    <p>Consulta i contratti effettuati</p>
+                </button>
+
+                <!-- Logout -->
+                <button class="dashboard-card logout-card" onclick="auth.logout()">
+                    <div class="card-icon">🚪</div>
+                    <h3>Logout</h3>
+                    <p>Esci dall'applicazione</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- Nuovo Contratto Section -->
+        <section id="new-contract-section" class="section hidden">
+            <div class="section-header">
+                <button class="btn btn-back" onclick="app.showSection('home')">← Indietro</button>
+                <h2>Nuovo Contratto PLE</h2>
+            </div>
+            <form id="contract-form" class="form">
+                <div class="form-group">
+                    <label for="contract-company">Azienda/Cliente</label>
+                    <input type="text" id="contract-company" name="company" required placeholder="Nome dell'azienda o cliente">
+                </div>
+                <div class="form-group">
+                    <label for="contract-date">Data Inizio</label>
+                    <input type="date" id="contract-date" name="start_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="contract-end-date">Data Fine</label>
+                    <input type="date" id="contract-end-date" name="end_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="contract-ple-type">Tipo PLE</label>
+                    <select id="contract-ple-type" name="ple_type" required>
+                        <option value="">Seleziona tipo PLE</option>
+                        <option value="verticale">PLE Verticale</option>
+                        <option value="semovente">PLE Semovente</option>
+                        <option value="a_BR">PLE a_BR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contract-notes">Note</label>
+                    <textarea id="contract-notes" name="notes" rows="4" placeholder="Eventuali note aggiuntive"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Salva Contratto</button>
+            </form>
+            <div id="contract-success" class="success-message hidden"></div>
+        </section>
+
+        <!-- Checklist Section -->
+        <section id="checklist-section" class="section hidden">
+            <div class="section-header">
+                <button class="btn btn-back" onclick="app.showSection('home')">← Indietro</button>
+                <h2>Checklist Verifica PLE</h2>
+            </div>
+            
+            <form id="checklist-form" class="form">
+                <div class="form-group">
+                    <label for="checklist-contract">Seleziona Contratto</label>
+                    <select id="checklist-contract" name="contract_id" required>
+                        <option value="">Seleziona un contratto</option>
+                    </select>
+                </div>
+
+                <div class="checklist-items">
+                    <!-- Domande Checklist -->
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_1" required>
+                            <span>1. Controllo visivo generale della struttura</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_1" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_2" required>
+                            <span>2. Verifica funzionamento comandi idraulici</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_2" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_3" required>
+                            <span>3. Controllo pneumatici e freni</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_3" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_4" required>
+                            <span>4. Verifica batteria e caricabatteria</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_4" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_5" required>
+                            <span>5. Controllo cestello e parapetti</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_5" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_6" required>
+                            <span>6. Verifica sensori di sicurezza</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_6" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_7" required>
+                            <span>7. Controllo libretto uso e manutenzione</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_7" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <div class="checklist-item">
+                        <label class="checklist-question">
+                            <input type="checkbox" name="check_8" required>
+                            <span>8. Prova di sollevamento a vuoto</span>
+                        </label>
+                        <div class="photo-upload">
+                            <label>Foto prova visiva:</label>
+                            <input type="file" name="photo_8" accept="image/*" capture="environment">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="checklist-notes">Note aggiuntive</label>
+                    <textarea id="checklist-notes" name="notes" rows="4" placeholder="Eventuali osservazioni"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Salva Checklist</button>
+            </form>
+            <div id="checklist-success" class="success-message hidden"></div>
+        </section>
+
+        <!-- Contratti Section -->
+        <section id="contracts-section" class="section hidden">
+            <div class="section-header">
+                <button class="btn btn-back" onclick="app.showSection('home')">← Indietro</button>
+                <h2>Contratti Effettuati</h2>
+            </div>
+            <div id="contracts-list" class="contracts-list">
+                <!-- I contratti verranno caricati dinamicamente -->
+            </div>
+        </section>
+
+        <!-- Dettagli Contratto Section -->
+        <section id="contract-detail-section" class="section hidden">
+            <div class="section-header">
+                <button class="btn btn-back" onclick="app.showSection('contracts')">← Indietro</button>
+                <h2>Dettagli Contratto</h2>
+            </div>
+            <div id="contract-detail-content" class="contract-detail">
+                <!-- Dettagli del contratto verranno caricati qui -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Configurazione Supabase -->
+    <script>
+        // CONFIGURAZIONE - Sostituisci con le tue credenziali
+        const SUPABASE_URL = 'TUO_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'TUO_SUPABASE_ANON_KEY';
+        
+        // Inizializza Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    
+    <script src="auth.js"></script>
+    <script src="database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

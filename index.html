@@ -18,6 +18,7 @@
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
+            <img src="pt.png" alt="Logo" class="header-logo">
             <h1>Gestione PLE</h1>
             <p class="subtitle">Piattaforma di Lavoro Elevato</p>
         </header>
@@ -84,32 +85,88 @@
                 <button class="btn btn-back" onclick="app.showSection('home')">← Indietro</button>
                 <h2>Nuovo Contratto PLE</h2>
             </div>
-            <form id="contract-form" class="form">
-                <div class="form-group">
-                    <label for="contract-company">Azienda/Cliente</label>
-                    <input type="text" id="contract-company" name="company" required placeholder="Nome dell'azienda o cliente">
+            
+            <!-- Intestazione documento stile rapporto verifica -->
+            <div class="contract-header">
+                <div class="header-left">
+                    <img src="pt.png" alt="Logo Pannelli Termici" class="contract-logo">
                 </div>
-                <div class="form-group">
-                    <label for="contract-date">Data Inizio</label>
-                    <input type="date" id="contract-date" name="start_date" required>
+                <div class="header-right">
+                    <h3>PANNELLI TERMICI S.r.l.</h3>
+                    <p class="quality-system">Sistema di Gestione Qualità</p>
+                    <p class="document-type">MODULO CONTRATTO NOLEGGIO PLE</p>
+                    <p class="revision">Rev. 0 del 01/01/2025</p>
                 </div>
-                <div class="form-group">
-                    <label for="contract-end-date">Data Fine</label>
-                    <input type="date" id="contract-end-date" name="end_date" required>
+            </div>
+            
+            <form id="contract-form" class="form contract-form">
+                <!-- Sezione Mezzi -->
+                <div class="form-section">
+                    <h4>Mezzo per Noleggio</h4>
+                    <div class="form-group">
+                        <label for="contract-ple-model">Seleziona Mezzo</label>
+                        <select id="contract-ple-model" name="ple_model" required>
+                            <option value="">Seleziona il mezzo</option>
+                            <option value="PLE Haulotte Verticale">PLE Haulotte Verticale</option>
+                            <option value="Cesab MAK 45">Cesab MAK 45</option>
+                            <option value="Cesab Blitz 16">Cesab Blitz 16</option>
+                            <option value="Hyster 28">Hyster 28</option>
+                            <option value="Robustus">Robustus</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="contract-ple-type">Tipo PLE</label>
-                    <select id="contract-ple-type" name="ple_type" required>
-                        <option value="">Seleziona tipo PLE</option>
-                        <option value="verticale">PLE Verticale</option>
-                        <option value="semovente">PLE Semovente</option>
-                        <option value="a_BR">PLE a_BR</option>
-                    </select>
+                
+                <!-- Sezione Comodante -->
+                <div class="form-section">
+                    <h4>Comodante (Concedente)</h4>
+                    <div class="party-info commodante-info">
+                        <p><strong>Pannelli Termici S.r.l.</strong></p>
+                        <p>Via dell'Alpo n°27</p>
+                        <p>37136 Verona (VR)</p>
+                        <p>C.F./P.IVA 00454730235</p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="contract-notes">Note</label>
-                    <textarea id="contract-notes" name="notes" rows="4" placeholder="Eventuali note aggiuntive"></textarea>
+                
+                <!-- Sezione Comodatario -->
+                <div class="form-section">
+                    <h4>Comodatario (Richiedente)</h4>
+                    <div class="form-group">
+                        <label for="contract-company">Ragione Sociale Azienda</label>
+                        <input type="text" id="contract-company" name="company" required placeholder="Nome dell'azienda o cliente">
+                    </div>
+                    <div class="form-group">
+                        <label for="contract-address">Indirizzo</label>
+                        <input type="text" id="contract-address" name="address" required placeholder="Via, Piazza, CAP, Città, Provincia">
+                    </div>
+                    <div class="form-group">
+                        <label for="contract-fiscal-code">C.F./P.IVA</label>
+                        <input type="text" id="contract-fiscal-code" name="fiscal_code" required placeholder="Codice Fiscale o Partita IVA">
+                    </div>
                 </div>
+                
+                <!-- Sezione Date -->
+                <div class="form-section">
+                    <h4>Periodo di Noleggio</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contract-date">Data Inizio</label>
+                            <input type="date" id="contract-date" name="start_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contract-end-date">Data Fine</label>
+                            <input type="date" id="contract-end-date" name="end_date" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sezione Note -->
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="contract-notes">Note</label>
+                        <textarea id="contract-notes" name="notes" rows="4" placeholder="Eventuali note aggiuntive"></textarea>
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn btn-primary">Salva Contratto</button>
             </form>
             <div id="contract-success" class="success-message hidden"></div>
@@ -131,89 +188,136 @@
                 </div>
 
                 <div class="checklist-items">
-                    <!-- Domande Checklist -->
+                    <!-- Domanda 1: Controllo visivo generale della struttura -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_1" required>
-                            <span>1. Controllo visivo generale della struttura</span>
-                        </label>
+                        <div class="checklist-question">1. Controllo visivo generale della struttura</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_1" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_1" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_1" id="response_1" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_1" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_1" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 2: Verifica funzionamento comandi idraulici -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_2" required>
-                            <span>2. Verifica funzionamento comandi idraulici</span>
-                        </label>
+                        <div class="checklist-question">2. Verifica funzionamento comandi idraulici</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_2" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_2" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_2" id="response_2" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_2" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_2" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 3: Controllo pneumatici e freni -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_3" required>
-                            <span>3. Controllo pneumatici e freni</span>
-                        </label>
+                        <div class="checklist-question">3. Controllo pneumatici e freni</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_3" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_3" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_3" id="response_3" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_3" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_3" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 4: Verifica batteria e caricabatteria -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_4" required>
-                            <span>4. Verifica batteria e caricabatteria</span>
-                        </label>
+                        <div class="checklist-question">4. Verifica batteria e caricabatteria</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_4" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_4" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_4" id="response_4" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_4" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_4" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 5: Controllo cestello e parapetti -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_5" required>
-                            <span>5. Controllo cestello e parapetti</span>
-                        </label>
+                        <div class="checklist-question">5. Controllo cestello e parapetti</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_5" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_5" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_5" id="response_5" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_5" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_5" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 6: Verifica sensori di sicurezza -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_6" required>
-                            <span>6. Verifica sensori di sicurezza</span>
-                        </label>
+                        <div class="checklist-question">6. Verifica sensori di sicurezza</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_6" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_6" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_6" id="response_6" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_6" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_6" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 7: Controllo libretto uso e manutenzione -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_7" required>
-                            <span>7. Controllo libretto uso e manutenzione</span>
-                        </label>
+                        <div class="checklist-question">7. Controllo libretto uso e manutenzione</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_7" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_7" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_7" id="response_7" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_7" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_7" accept="image/*" capture="environment">
                         </div>
                     </div>
 
+                    <!-- Domanda 8: Prova di sollevamento a vuoto -->
                     <div class="checklist-item">
-                        <label class="checklist-question">
-                            <input type="checkbox" name="check_8" required>
-                            <span>8. Prova di sollevamento a vuoto</span>
-                        </label>
+                        <div class="checklist-question">8. Prova di sollevamento a vuoto</div>
+                        <div class="response-buttons">
+                            <button type="button" class="btn-response btn-si" data-input="response_8" onclick="app.setResponse(this, 'si')">Si</button>
+                            <button type="button" class="btn-response btn-no" data-input="response_8" onclick="app.setResponse(this, 'no')">No</button>
+                            <input type="hidden" name="response_8" id="response_8" required>
+                        </div>
+                        <div class="checklist-note">
+                            <textarea name="note_8" rows="2" placeholder="Note (opzionale)..."></textarea>
+                        </div>
                         <div class="photo-upload">
                             <label>Foto prova visiva:</label>
                             <input type="file" name="photo_8" accept="image/*" capture="environment">
@@ -227,6 +331,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Salva Checklist</button>
+                <button type="button" class="btn btn-success" onclick="app.sendChecklistFromForm()">📧 Invia Checklist per Email</button>
             </form>
             <div id="checklist-success" class="success-message hidden"></div>
         </section>
@@ -254,14 +359,16 @@
         </section>
     </div>
 
+    <!-- Inizializza Supabase -->
+    <script>
         // Inizializza il client Supabase
         window.supabase = window.supabase.createClient(window.SB_URL, window.SB_KEY);
         console.log('Supabase inizializzato');
     </script>
-    </script>
     
     <script src="auth.js"></script>
     <script src="database.js"></script>
+    <script src="pdf-generator.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -3,6 +3,10 @@
  * Gestisce login, logout e verifica stato utente
  */
 
+// Debug: verifica Supabase
+console.log('Auth.js - window.supabase:', window.supabase);
+console.log('Auth.js - window.supabase.auth:', window.supabase?.auth);
+
 const auth = {
     /**
      * Inizializza il listener per i cambiamenti di stato di autenticazione
@@ -10,9 +14,17 @@ const auth = {
     init() {
         // Verifica che Supabase sia inizializzato
         if (!window.supabase) {
-            console.error('Supabase non inizializzato');
+            console.error('Supabase non inizializzato, riprovo tra 1 secondo...');
+            setTimeout(() => this.init(), 1000);
             return;
         }
+        
+        if (!window.supabase.auth) {
+            console.error('Supabase SDK loaded but auth not available');
+            return;
+        }
+        
+        console.log('Supabase disponibile:', window.supabase);
         
         // Ascolta i cambiamenti di stato dell'utente
         window.supabase.auth.onAuthStateChange((event, session) => {
@@ -46,9 +58,16 @@ const auth = {
      * @param {string} password - Password dell'utente
      */
     async login(email, password) {
+        // Attendi che Supabase sia disponibile
         if (!window.supabase) {
-            return { success: false, error: 'Supabase non inizializzato' };
+            console.error('Supabase non inizializzato, riprovo...');
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
+        
+        if (!window.supabase || !window.supabase.auth) {
+            return { success: false, error: 'Supabase non pronto. Ricarica la pagina.' };
+        }
+        
         try {
             const { data, error } = await window.supabase.auth.signInWithPassword({
                 email: email,

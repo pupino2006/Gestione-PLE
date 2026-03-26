@@ -49,6 +49,25 @@ body {
     margin-bottom: 30px;
 }
 
+.header-logo {
+    width: 120px;
+    height: auto;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.app-header h1 {
+    margin: 10px 0 5px;
+    color: #1e3a5f;
+}
+
+.app-header .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
 .app-header h1 {
     font-size: 2.5rem;
     color: var(--primary-color);
@@ -316,6 +335,94 @@ body {
     border-color: var(--primary-color);
 }
 
+/* Response Buttons - Si/No */
+.response-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.btn-response {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--card-background);
+    color: var(--text-secondary);
+}
+
+.btn-response:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-response.btn-si {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-response.btn-si:hover,
+.btn-response.btn-si.active {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-response.btn-no {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-response.btn-no:hover,
+.btn-response.btn-no.active {
+    background: var(--danger-color);
+    color: white;
+}
+
+/* Checklist Note */
+.checklist-note {
+    margin: 15px 0;
+}
+
+.checklist-note textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+    transition: var(--transition);
+}
+
+.checklist-note textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.checklist-note textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* Stile per il pulsante di invio email */
+.btn-success {
+    background: var(--success-color);
+    color: white;
+    margin-top: 15px;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 /* Contracts List */
 .contracts-list {
     display: flex;
@@ -340,6 +447,13 @@ body {
 .contract-card h3 {
     color: var(--text-primary);
     margin-bottom: 8px;
+}
+
+.contract-card .contract-ple {
+    color: #2c5282;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 5px;
 }
 
 .contract-card .contract-date {
@@ -454,4 +568,150 @@ body {
 .empty-state .icon {
     font-size: 3rem;
     margin-bottom: 15px;
+}
+
+/* ============================================
+   STILI CONTRATTO - Stile Rapporto Verifica
+   ============================================ */
+
+/* Intestazione documento contratto */
+.contract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(to right, #1e3a5f, #2c5282);
+    padding: 25px 30px;
+    border-radius: var(--radius);
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-md);
+}
+
+.header-left {
+    flex: 0 0 auto;
+}
+
+.contract-logo {
+    width: 100px;
+    height: auto;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.header-right {
+    text-align: right;
+    color: white;
+}
+
+.header-right h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.header-right .quality-system {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.header-right .document-type {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.header-right .revision {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+/* Form contratti */
+.contract-form {
+    background: var(--card-background);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-md);
+}
+
+/* Sezioni del form */
+.form-section {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.form-section h4 {
+    color: #1e3a5f;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2c5282;
+    font-weight: 600;
+}
+
+/* Informazioni parte (comodante/comodatario) */
+.party-info {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid #2c5282;
+}
+
+.party-info p {
+    margin: 4px 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.party-info strong {
+    color: #1e3a5f;
+    font-size: 1rem;
+}
+
+.commodante-info {
+    border-left-color: #2c5282;
+    background: #ebf4ff;
+}
+
+/* Riga con due campi */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Responsive per il form */
+@media (max-width: 768px) {
+    .contract-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-left {
+        margin-bottom: 20px;
+    }
+    
+    .header-right {
+        text-align: center;
+    }
+    
+    .contract-logo {
+        width: 80px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .contract-form {
+        padding: 20px;
+    }
 }

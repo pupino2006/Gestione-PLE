@@ -54,7 +54,7 @@ const app = {
         const result = await auth.login(email, password);
 
         if (!result.success) {
-            errorDiv.textContent = 'Email o password non validi. Riprova.';
+            errorDiv.textContent = 'Errore: ' + result.error + '. Riprova.';
         }
     },
 

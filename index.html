@@ -251,11 +251,12 @@
     <!-- Configurazione Supabase -->
     <script>
         // CONFIGURAZIONE - Sostituisci con le tue credenziali
-        const SUPABASE_URL = 'TUO_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'TUO_SUPABASE_ANON_KEY';
+        const SB_URL = "https://fhijxhjsxkwtufzcuxuc.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaWp4aGpzeGt3dHVmemN1eHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU2ODMsImV4cCI6MjA5MDEwMTY4M30.tGCibovkbjw7pF4t22zNp_i-nKCP6fxdw496i5kNz98";
+
         
         // Inizializza Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
     </script>
     
     <script src="auth.js"></script>

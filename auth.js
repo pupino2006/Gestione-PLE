@@ -46,8 +46,12 @@ const auth = {
             });
 
             if (error) {
+                console.error('Errore Supabase:', error);
                 throw error;
             }
+
+            console.log('Login effettuato:', data);
+            return { success: true, user: data.user };
 
             // Login riuscito - il listener onAuthStateChange gestirà il redirect
             return { success: true, user: data.user };

@@ -8,8 +8,15 @@ const auth = {
      * Inizializza il listener per i cambiamenti di stato di autenticazione
      */
     init() {
+        // Verifica che Supabase sia inizializzato
+        if (!window.supabase) {
+            console.error('Supabase non inizializzato');
+            return;
+        }
+        
         // Ascolta i cambiamenti di stato dell'utente
-        supabase.auth.onAuthStateChange((event, session) => {
+        window.supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state change:', event, session);
             if (event === 'SIGNED_IN' && session) {
                 app.onLogin(session.user);
             } else if (event === 'SIGNED_OUT') {
@@ -39,8 +46,11 @@ const auth = {
      * @param {string} password - Password dell'utente
      */
     async login(email, password) {
+        if (!window.supabase) {
+            return { success: false, error: 'Supabase non inizializzato' };
+        }
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await window.supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
@@ -51,9 +61,6 @@ const auth = {
             }
 
             console.log('Login effettuato:', data);
-            return { success: true, user: data.user };
-
-            // Login riuscito - il listener onAuthStateChange gestirà il redirect
             return { success: true, user: data.user };
         } catch (error) {
             console.error('Errore login:', error.message);
@@ -66,7 +73,7 @@ const auth = {
      */
     async logout() {
         try {
-            const { error } = await supabase.auth.signOut();
+            const { error } = await window.supabase.auth.signOut();
             if (error) {
                 throw error;
             }
@@ -85,7 +92,7 @@ const auth = {
      */
     async signUp(email, password) {
         try {
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await window.supabase.auth.signUp({
                 email: email,
                 password: password
             });

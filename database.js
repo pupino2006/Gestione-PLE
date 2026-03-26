@@ -11,7 +11,7 @@ const database = {
      */
     async createContract(contract) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('contracts')
                 .insert([
                     {
@@ -44,7 +44,7 @@ const database = {
      */
     async getContracts(userId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('contracts')
                 .select('*')
                 .eq('user_id', userId)
@@ -68,7 +68,7 @@ const database = {
      */
     async getContractById(contractId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('contracts')
                 .select('*')
                 .eq('id', contractId)
@@ -93,7 +93,7 @@ const database = {
      */
     async updateContractStatus(contractId, status) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('contracts')
                 .update({ status: status })
                 .eq('id', contractId)
@@ -121,7 +121,7 @@ const database = {
             const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const filePath = `${folder}/${fileName}`;
 
-            const { data, error } = await supabase.storage
+            const { data, error } = await window.supabase.storage
                 .from('ple-photos')
                 .upload(filePath, file);
 
@@ -130,7 +130,7 @@ const database = {
             }
 
             // Ottieni l'URL pubblico
-            const { data: urlData } = supabase.storage
+            const { data: urlData } = window.supabase.storage
                 .from('ple-photos')
                 .getPublicUrl(filePath);
 
@@ -148,7 +148,7 @@ const database = {
      */
     async saveChecklist(checklist) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('checklists')
                 .insert([
                     {
@@ -197,7 +197,7 @@ const database = {
      */
     async getChecklistsByContract(contractId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('checklists')
                 .select('*')
                 .eq('contract_id', contractId)
@@ -221,7 +221,7 @@ const database = {
      */
     async getChecklistById(checklistId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('checklists')
                 .select('*')
                 .eq('id', checklistId)
@@ -245,7 +245,7 @@ const database = {
      */
     async deleteContract(contractId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('contracts')
                 .update({ status: 'eliminato' })
                 .eq('id', contractId)

@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione PLE - Piattaforma di Lavoro Elevato</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Configurazione Supabase - PRIMA dell'SDK per evitare conflitti -->
+    <script>
+        // CONFIGURAZIONE
+        window.SB_URL = "https://fhijxhjsxkwtufzcuxuc.supabase.co";
+        window.SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaWp4aGpzeGt3dHVmemN1eHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU2ODMsImV4cCI6MjA5MDEwMTY4M30.tGCibovkbjw7pF4t22zNp_i-nKCP6fxdw496i5kNz98";
+    </script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -248,15 +254,10 @@
         </section>
     </div>
 
-    <!-- Configurazione Supabase -->
-    <script>
-        // CONFIGURAZIONE - Sostituisci con le tue credenziali
-        const SB_URL = "https://fhijxhjsxkwtufzcuxuc.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoaWp4aGpzeGt3dHVmemN1eHVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU2ODMsImV4cCI6MjA5MDEwMTY4M30.tGCibovkbjw7pF4t22zNp_i-nKCP6fxdw496i5kNz98";
-
-        
-        // Inizializza Supabase
-        const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+        // Inizializza il client Supabase
+        window.supabase = window.supabase.createClient(window.SB_URL, window.SB_KEY);
+        console.log('Supabase inizializzato');
+    </script>
     </script>
     
     <script src="auth.js"></script>

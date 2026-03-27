@@ -333,7 +333,10 @@ const app = {
                         attachmentBase64: pdfResult.base64 // Invia anche l'allegato per comodità
                     };
 
-                    await this.callEdgeFunction('send-email', emailData);
+                    const sendResult = await this.callEdgeFunction('send-email', emailData);
+                    if (!sendResult.success) {
+                        throw new Error("Errore invio mail: " + sendResult.error);
+                    }
                 }
                 
                 successDiv.textContent = 'Contratto creato, firmato e inviato via email con successo!';
@@ -1094,7 +1097,7 @@ Pannelli Termici S.r.l.`;
             const result = await response.json();
             
             if (!response.ok) {
-                throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                return { success: false, error: result.error || `HTTP error! status: ${response.status}` };
             }
 
             return result;

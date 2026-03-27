@@ -1087,16 +1087,18 @@ Pannelli Termici S.r.l.`;
             const { data: sessionData } = await window.supabase.auth.getSession();
             const accessToken = sessionData?.session?.access_token;
 
+            if (!accessToken) {
+                return {
+                    success: false,
+                    error: 'Sessione non valida o scaduta. Effettua di nuovo il login e riprova.'
+                };
+            }
+
             const headers = {
                 'Content-Type': 'application/json',
-                apikey: supabaseKey
+                apikey: supabaseKey,
+                Authorization: `Bearer ${accessToken}`
             };
-
-            if (accessToken) {
-                headers.Authorization = `Bearer ${accessToken}`;
-            } else {
-                headers.Authorization = `Bearer ${supabaseKey}`;
-            }
 
             const response = await fetch(functionUrl, {
                 method: 'POST',

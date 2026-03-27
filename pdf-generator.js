@@ -10,7 +10,7 @@ const pdfGenerator = {
     commodante: {
         name: "Pannelli Termici S.r.l.",
         address: "Via dell'Alpo n°27",
-        city: "37136 Verona (VR)",
+        city: "64026 Roseto Degli Abruzzi (TE)",
         fiscalCode: "C.F./P.IVA 00454730235"
     },
 
@@ -139,8 +139,7 @@ const pdfGenerator = {
         doc.setFont('helvetica', 'normal');
         
         // Mezzo
-        const pleLabel = this.getPleTypeLabel(contract.ple_model);
-        doc.text(`Mezzo: ${pleLabel}`, marginLeft, currentY);
+        doc.text(`Mezzo: ${contract.ple_model || '-'}`, marginLeft, currentY);
         currentY += 6;
 
         // Date
@@ -189,7 +188,7 @@ const pdfGenerator = {
         doc.setLineWidth(0.3);
         doc.line(marginLeft, currentY, marginLeft + contentWidth, currentY);
 
-        currentY += 15;
+        currentY += 10;
 
         // Firme
         const centerX = marginLeft + contentWidth / 2;
@@ -201,21 +200,20 @@ const pdfGenerator = {
         
         // Data e luogo
         const today = this.formatDate(new Date().toISOString());
-        doc.text(`Verona, ${today}`, marginLeft + contentWidth / 2, currentY, { align: 'center' });
+        doc.text(`Roseto Degli Abruzzi, ${today}`, marginLeft + contentWidth / 2, currentY, { align: 'center' });
 
-        currentY += 15;
+        currentY += 10;
 
         // Intestazioni firma
         doc.setFontSize(9);
         doc.text("Il Comodante", leftCol, currentY);
         doc.text("Il Comodatario", rightCol, currentY);
 
-        currentY += 10;
+        currentY += 5;
 
         // Spazio firma comodatario
         doc.setDrawColor(150, 150, 150);
         doc.setLineWidth(0.2);
-        doc.line(rightCol, currentY, rightCol + 60, currentY);
 
         // Timbro e firma del comodante (a sinistra)
         try {
@@ -223,46 +221,48 @@ const pdfGenerator = {
             doc.setDrawColor(102, 0, 0);
             doc.setLineWidth(0.5);
             const stampX = leftCol;
-            const stampY = currentY - 8;
-            doc.rect(stampX, stampY, 50, 25);
+            const stampY = currentY;
+            const stampWidth = 55;
+            const stampHeight = 30;
+            doc.rect(stampX, stampY, stampWidth, stampHeight);
             
             // Testo timbro
             doc.setFontSize(7);
             doc.setTextColor(102, 0, 0);
-            doc.text("PANNELLI TERMICI S.r.l.", stampX + 25, stampY + 8, { align: 'center' });
-            doc.text("Via dell'Alpo, 27", stampX + 25, stampY + 13, { align: 'center' });
-            doc.text("37136 Verona", stampX + 25, stampY + 18, { align: 'center' });
-            doc.text("C.F./P.IVA 00454730235", stampX + 25, stampY + 23, { align: 'center' });
+            doc.text("PANNELLI TERMICI S.r.l.", stampX + stampWidth / 2, stampY + 8, { align: 'center' });
+            doc.text("Via dell'Alpo, 27", stampX + stampWidth / 2, stampY + 13, { align: 'center' });
+            doc.text("Roseto Degli Abruzzi (TE)", stampX + stampWidth / 2, stampY + 18, { align: 'center' });
+            doc.text("C.F./P.IVA 00454730235", stampX + stampWidth / 2, stampY + 24, { align: 'center' });
 
             // Usa la firma digitale del comodante se disponibile, altrimenti usa Firma.png
             if (contract.comodante_signature) {
-                doc.addImage(contract.comodante_signature, 'PNG', stampX + 2, stampY + 3, 30, 15);
+                doc.addImage(contract.comodante_signature, 'PNG', stampX + 3, stampY + 3, 35, 20);
             } else {
                 const firmaData = await this.getImageAsBase64('Firma.png');
-                doc.addImage(firmaData, 'PNG', stampX + 2, stampY + 3, 30, 15);
+                doc.addImage(firmaData, 'PNG', stampX + 3, stampY + 3, 35, 20);
             }
         } catch (e) {
             console.error('Errore caricamento firma/timbro:', e);
             // Firma alternativa se immagine non disponibile
-            doc.setFontSize(12);
+            doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
-            doc.text("_________________", leftCol + 20, currentY);
+            doc.text("_________________", leftCol, currentY + 20);
         }
         
         // Firma del comodatario (a destra)
         if (contract.comodatario_signature) {
             try {
-                doc.addImage(contract.comodatario_signature, 'PNG', rightCol, currentY - 8, 50, 25);
+                doc.addImage(contract.comodatario_signature, 'PNG', rightCol, currentY, 60, 30);
             } catch (e) {
                 console.error('Errore caricamento firma comodatario:', e);
-                doc.setFontSize(12);
+                doc.setFontSize(10);
                 doc.setTextColor(0, 0, 0);
-                doc.text("_________________", rightCol + 20, currentY);
+                doc.text("_________________", rightCol, currentY + 20);
             }
         } else {
-            doc.setFontSize(12);
+            doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
-            doc.text("_________________", rightCol + 20, currentY);
+            doc.line(rightCol, currentY + 20, rightCol + 60, currentY + 20);
         }
 
         // ========== PIÈ DI PAGINA ==========
@@ -405,8 +405,7 @@ const pdfGenerator = {
         doc.setFont('helvetica', 'normal');
         
         // Mezzo
-        const pleLabel = this.getPleTypeLabel(contract.ple_model);
-        doc.text(`Mezzo: ${pleLabel}`, marginLeft, currentY);
+        doc.text(`Mezzo: ${contract.ple_model || '-'}`, marginLeft, currentY);
         currentY += 6;
 
         // Date
@@ -455,7 +454,7 @@ const pdfGenerator = {
         doc.setLineWidth(0.3);
         doc.line(marginLeft, currentY, marginLeft + contentWidth, currentY);
 
-        currentY += 15;
+        currentY += 10;
 
         // Firme
         const centerX = marginLeft + contentWidth / 2;
@@ -467,21 +466,20 @@ const pdfGenerator = {
         
         // Data e luogo
         const today = this.formatDate(new Date().toISOString());
-        doc.text(`Verona, ${today}`, marginLeft + contentWidth / 2, currentY, { align: 'center' });
+        doc.text(`Roseto Degli Abruzzi, ${today}`, marginLeft + contentWidth / 2, currentY, { align: 'center' });
 
-        currentY += 15;
+        currentY += 10;
 
         // Intestazioni firma
         doc.setFontSize(9);
         doc.text("Il Comodante", leftCol, currentY);
         doc.text("Il Comodatario", rightCol, currentY);
 
-        currentY += 10;
+        currentY += 5;
 
         // Spazio firma comodatario
         doc.setDrawColor(150, 150, 150);
         doc.setLineWidth(0.2);
-        doc.line(rightCol, currentY, rightCol + 60, currentY);
 
         // Timbro e firma del comodante (a sinistra)
         try {
@@ -489,46 +487,48 @@ const pdfGenerator = {
             doc.setDrawColor(102, 0, 0);
             doc.setLineWidth(0.5);
             const stampX = leftCol;
-            const stampY = currentY - 8;
-            doc.rect(stampX, stampY, 50, 25);
+            const stampY = currentY;
+            const stampWidth = 55;
+            const stampHeight = 30;
+            doc.rect(stampX, stampY, stampWidth, stampHeight);
             
             // Testo timbro
             doc.setFontSize(7);
             doc.setTextColor(102, 0, 0);
-            doc.text("PANNELLI TERMICI S.r.l.", stampX + 25, stampY + 8, { align: 'center' });
-            doc.text("Via dell'Alpo, 27", stampX + 25, stampY + 13, { align: 'center' });
-            doc.text("37136 Verona", stampX + 25, stampY + 18, { align: 'center' });
-            doc.text("C.F./P.IVA 00454730235", stampX + 25, stampY + 23, { align: 'center' });
+            doc.text("PANNELLI TERMICI S.r.l.", stampX + stampWidth / 2, stampY + 8, { align: 'center' });
+            doc.text("Via dell'Alpo, 27", stampX + stampWidth / 2, stampY + 13, { align: 'center' });
+            doc.text("Roseto Degli Abruzzi (TE)", stampX + stampWidth / 2, stampY + 18, { align: 'center' });
+            doc.text("C.F./P.IVA 00454730235", stampX + stampWidth / 2, stampY + 24, { align: 'center' });
 
             // Usa la firma digitale del comodante se disponibile, altrimenti usa Firma.png
             if (contract.comodante_signature) {
-                doc.addImage(contract.comodante_signature, 'PNG', stampX + 2, stampY + 3, 30, 15);
+                doc.addImage(contract.comodante_signature, 'PNG', stampX + 3, stampY + 3, 35, 20);
             } else {
                 const firmaData = await this.getImageAsBase64('Firma.png');
-                doc.addImage(firmaData, 'PNG', stampX + 2, stampY + 3, 30, 15);
+                doc.addImage(firmaData, 'PNG', stampX + 3, stampY + 3, 35, 20);
             }
         } catch (e) {
             console.error('Errore caricamento firma/timbro:', e);
             // Firma alternativa se immagine non disponibile
-            doc.setFontSize(12);
+            doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
-            doc.text("_________________", leftCol + 20, currentY);
+            doc.text("_________________", leftCol, currentY + 20);
         }
         
         // Firma del comodatario (a destra)
         if (contract.comodatario_signature) {
             try {
-                doc.addImage(contract.comodatario_signature, 'PNG', rightCol, currentY - 8, 50, 25);
+                doc.addImage(contract.comodatario_signature, 'PNG', rightCol, currentY, 60, 30);
             } catch (e) {
                 console.error('Errore caricamento firma comodatario:', e);
-                doc.setFontSize(12);
+                doc.setFontSize(10);
                 doc.setTextColor(0, 0, 0);
-                doc.text("_________________", rightCol + 20, currentY);
+                doc.text("_________________", rightCol, currentY + 20);
             }
         } else {
-            doc.setFontSize(12);
+            doc.setFontSize(10);
             doc.setTextColor(0, 0, 0);
-            doc.text("_________________", rightCol + 20, currentY);
+            doc.line(rightCol, currentY + 20, rightCol + 60, currentY + 20);
         }
 
         // ========== PIÈ DI PAGINA ==========

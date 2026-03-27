@@ -289,7 +289,7 @@ const app = {
         
         const contract = {
             user_id: this.currentUser.id,
-            ple_model: form.ple_model.value,
+            ple_type: form.ple_model.value,
             company: form.company.value,
             address: form.address.value,
             fiscal_code: form.fiscal_code.value,
@@ -303,21 +303,49 @@ const app = {
         };
 
         const result = await database.createContract(contract);
-        const successDiv = document.getElementById('contract-success');
 
         if (result.success) {
-            successDiv.textContent = 'Contratto creato e firmato con successo!';
+            const savedContract = result.data;
+            const successDiv = document.getElementById('contract-success');
+            successDiv.textContent = 'Contratto salvato. Generazione PDF e invio email in corso...';
             successDiv.classList.remove('hidden');
-            form.reset();
-            
-            // Pulisci le firme
-            this.clearSignature('comodante');
-            this.clearSignature('comodatario');
-            
-            // Rimuovi il messaggio dopo 3 secondi
-            setTimeout(() => {
-                successDiv.classList.add('hidden');
-            }, 3000);
+
+            try {
+                // 1. Genera il PDF in base64
+                const pdfResult = await pdfGenerator.generateContractPDFAsBase64(savedContract);
+                
+                if (pdfResult.success) {
+                    // 2. Carica il PDF nello Storage per ottenere il link
+                    const uploadResult = await database.uploadContractPDF(pdfResult.base64, pdfResult.fileName);
+                    const pdfUrl = uploadResult.success ? uploadResult.url : null;
+                    
+                    // 3. Salva il link nel DB (opzionale ma consigliato)
+                    if (pdfUrl) {
+                        await database.updateContractSignatures(savedContract.id, { pdf_url: pdfUrl });
+                    }
+
+                    // 4. Invia l'email a geom.rip@gmail.com
+                    const emailData = {
+                        to: 'geom.rip@gmail.com',
+                        subject: `Nuovo Contratto PLE Firmato - ${savedContract.company}`,
+                        body: `È stato generato un nuovo contratto di comodato d'uso.\n\nAzienda: ${savedContract.company}\nMezzo: ${this.getPleTypeLabel(savedContract.ple_type)}\n\nPuoi scaricare il PDF qui: ${pdfUrl || 'Disponibile nel sistema'}`,
+                        attachmentName: pdfResult.fileName,
+                        attachmentBase64: pdfResult.base64 // Invia anche l'allegato per comodità
+                    };
+
+                    await this.callEdgeFunction('send-email', emailData);
+                }
+                
+                successDiv.textContent = 'Contratto creato, firmato e inviato via email con successo!';
+                form.reset();
+                this.clearSignature('comodante');
+                this.clearSignature('comodatario');
+                
+                setTimeout(() => successDiv.classList.add('hidden'), 5000);
+            } catch (err) {
+                console.error('Errore post-salvataggio:', err);
+                alert('Contratto salvato correttamente, ma si è verificato un errore durante l\'invio dell\'email.');
+            }
         } else {
             alert('Errore nella creazione del contratto: ' + result.error);
         }
@@ -567,7 +595,7 @@ const app = {
 in allegato trovi la checklist di verifica PLE per il contratto con:
 
 Azienda: ${contract.company}
-Mezzo: ${this.getPleTypeLabel(contract.ple_model)}
+Mezzo: ${this.getPleTypeLabel(contract.ple_type)}
 Periodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}
 
 ===========================================
@@ -651,7 +679,7 @@ Pannelli Termici S.r.l.`;
 
                 card.innerHTML = `
                     <h3>${this.escapeHtml(contract.company)}</h3>
-                    <p class="contract-ple">Mezzo: ${this.getPleTypeLabel(contract.ple_model)}</p>
+                    <p class="contract-ple">Mezzo: ${this.getPleTypeLabel(contract.ple_type)}</p>
                     <p class="contract-date">${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}</p>
                     <span class="contract-status ${statusClass}">${statusText}</span>
                 `;
@@ -710,7 +738,7 @@ Pannelli Termici S.r.l.`;
                 <h3>${this.escapeHtml(contract.company)}</h3>
                 <div class="detail-row">
                     <span class="detail-label">Mezzo</span>
-                    <span class="detail-value">${this.getPleTypeLabel(contract.ple_model)}</span>
+                    <span class="detail-value">${this.getPleTypeLabel(contract.ple_type)}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Data Inizio</span>
@@ -950,7 +978,7 @@ Pannelli Termici S.r.l.`;
                     const emailData = {
                         to: this.currentUser.email,
                         subject: `Contratto PLE - ${contract.company}`,
-                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_model)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
+                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_type)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
                         attachmentName: pdfResult.fileName,
                         attachmentBase64: pdfResult.base64
                     };
@@ -1209,7 +1237,7 @@ Pannelli Termici S.r.l.`;
                     const emailData = {
                         to: this.currentUser.email,
                         subject: `Contratto PLE - ${contract.company} - Aggiornamento`,
-                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto aggiornato di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_model)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\nStato: ${contract.status}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
+                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto aggiornato di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_type)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\nStato: ${contract.status}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
                         attachmentName: pdfResult.fileName,
                         attachmentBase64: pdfResult.base64
                     };

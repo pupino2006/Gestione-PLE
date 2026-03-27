@@ -39,7 +39,8 @@ const database = {
                         company: contract.company.trim(),
                         address: contract.address.trim(),
                         fiscal_code: contract.fiscal_code.trim(),
-                        ple_type: contract.ple_model.trim(),
+                        ple_type: contract.ple_type || contract.ple_model.trim(),
+                        ple_model: contract.ple_model.trim(),
                         start_date: contract.start_date,
                         end_date: contract.end_date,
                         notes: contract.notes ? contract.notes.trim() : null,
@@ -133,6 +134,41 @@ const database = {
             return { success: true, data: data[0] };
         } catch (error) {
             console.error('Errore aggiornamento stato contratto:', error.message);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Carica il PDF del contratto su Supabase Storage
+     * @param {string} base64 - PDF in base64
+     * @param {string} fileName - Nome del file
+     * @returns {object} - Risultato con URL pubblico
+     */
+    async uploadContractPDF(base64, fileName) {
+        try {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+            const filePath = `contracts/${fileName}`;
+
+            const { data, error } = await window.supabase.storage
+                .from('ple-photos')
+                .upload(filePath, blob, { contentType: 'application/pdf', upsert: true });
+
+            if (error) throw error;
+
+            const { data: urlData } = window.supabase.storage
+                .from('ple-photos')
+                .getPublicUrl(filePath);
+
+            return { success: true, url: urlData.publicUrl };
+        } catch (error) {
+            console.error('Errore upload PDF:', error.message);
             return { success: false, error: error.message };
         }
     },

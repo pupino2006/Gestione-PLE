@@ -6,6 +6,7 @@
 const app = {
     currentUser: null,
     currentSection: 'login',
+    notificationEmail: 'geom.rip@gmail.com',
 
     /**
      * Inizializza l'applicazione
@@ -324,9 +325,9 @@ const app = {
                         await database.updateContractSignatures(savedContract.id, { pdf_url: pdfUrl });
                     }
 
-                    // 4. Invia l'email a geom.rip@gmail.com
+                    // 4. Invia l'email all'indirizzo di notifica configurato
                     const emailData = {
-                        to: 'geom.rip@gmail.com',
+                        to: this.notificationEmail,
                         subject: `Nuovo Contratto PLE Firmato - ${savedContract.company}`,
                         body: `È stato generato un nuovo contratto di comodato d'uso.\n\nAzienda: ${savedContract.company}\nMezzo: ${this.getPleTypeLabel(savedContract.ple_type)}\n\nPuoi scaricare il PDF qui: ${pdfUrl || 'Disponibile nel sistema'}`,
                         attachmentName: pdfResult.fileName,
@@ -548,7 +549,7 @@ const app = {
                 
                 // Prepara i dati per l'email
                 const emailData = {
-                    to: this.currentUser.email,
+                    to: this.notificationEmail,
                     subject: `Checklist di Verifica PLE - ${contract.company}`,
                     body: this.buildChecklistEmailBody(checklist, contract),
                     checklistData: checklist,
@@ -593,7 +594,7 @@ const app = {
             '8. Prova di sollevamento a vuoto'
         ];
 
-        let body = `Gentile ${this.currentUser.email},
+        let body = `Gentile ${this.notificationEmail},
 
 in allegato trovi la checklist di verifica PLE per il contratto con:
 
@@ -979,9 +980,9 @@ Pannelli Termici S.r.l.`;
                 if (pdfResult.success) {
                     // Prepara i dati per l'email
                     const emailData = {
-                        to: this.currentUser.email,
+                        to: this.notificationEmail,
                         subject: `Contratto PLE - ${contract.company}`,
-                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_type)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
+                        body: `Gentile ${this.notificationEmail},\n\nin allegato trovi il contratto di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_type)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
                         attachmentName: pdfResult.fileName,
                         attachmentBase64: pdfResult.base64
                     };
@@ -1039,7 +1040,7 @@ Pannelli Termici S.r.l.`;
                     
                     // Prepara i dati per l'email della checklist
                     const emailData = {
-                        to: this.currentUser.email,
+                        to: this.notificationEmail,
                         subject: `Checklist di Verifica PLE - ${contract.company}`,
                         body: emailBody,
                         checklistData: checklist,
@@ -1078,36 +1079,23 @@ Pannelli Termici S.r.l.`;
      * @returns {Promise<object>} - Risultato
      */
     async callEdgeFunction(functionName, data) {
-        // Recupera URL e Key direttamente dall'istanza supabase attiva
-        const supabaseUrl = window.supabase.supabaseUrl;
-        const supabaseKey = window.supabase.supabaseKey;
-        
-        const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-
         try {
-            const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${supabaseKey}`
-                },
-                body: JSON.stringify(data)
+            // Usa invoke ufficiale del client Supabase: gestisce header/token corretti.
+            const { data: result, error } = await window.supabase.functions.invoke(functionName, {
+                body: data
             });
 
-            const result = await response.json();
-            
-            if (!response.ok) {
-                return { success: false, error: result.error || `HTTP error! status: ${response.status}` };
+            if (error) {
+                return { success: false, error: error.message || 'Errore chiamata Edge Function' };
             }
 
-            return result;
+            return result || { success: false, error: 'Risposta vuota dalla Edge Function' };
         } catch (error) {
             console.error('Errore chiamata Edge Function:', error);
             
-            // Ritorna un risultato simulato per testing locale
             return {
                 success: false,
-                error: 'Edge Function non disponibile. ' + error.message + '\n\nNota: Per usare le funzioni, configura Supabase con l\'URL e la chiave anonima nella console del browser (localStorage).'
+                error: 'Edge Function non disponibile. ' + error.message
             };
         }
     },
@@ -1240,9 +1228,9 @@ Pannelli Termici S.r.l.`;
                 if (pdfResult.success) {
                     // Prepara i dati per l'email
                     const emailData = {
-                        to: this.currentUser.email,
+                        to: this.notificationEmail,
                         subject: `Contratto PLE - ${contract.company} - Aggiornamento`,
-                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto aggiornato di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_type)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\nStato: ${contract.status}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
+                        body: `Gentile ${this.notificationEmail},\n\nin allegato trovi il contratto aggiornato di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_type)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\nStato: ${contract.status}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
                         attachmentName: pdfResult.fileName,
                         attachmentBase64: pdfResult.base64
                     };

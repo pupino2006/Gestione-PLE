@@ -11,18 +11,38 @@ const database = {
      */
     async createContract(contract) {
         try {
+            // Valida i campi obbligatori
+            if (!contract.ple_model || contract.ple_model.trim() === '') {
+                throw new Error('Seleziona un mezzo PLE valido');
+            }
+            if (!contract.company || contract.company.trim() === '') {
+                throw new Error('Inserisci la ragione sociale dell\'azienda');
+            }
+            if (!contract.address || contract.address.trim() === '') {
+                throw new Error('Inserisci l\'indirizzo');
+            }
+            if (!contract.fiscal_code || contract.fiscal_code.trim() === '') {
+                throw new Error('Inserisci il Codice Fiscale o Partita IVA');
+            }
+            if (!contract.start_date) {
+                throw new Error('Seleziona la data di inizio');
+            }
+            if (!contract.end_date) {
+                throw new Error('Seleziona la data di fine');
+            }
+
             const { data, error } = await window.supabase
                 .from('contracts')
                 .insert([
                     {
                         user_id: contract.user_id,
-                        company: contract.company,
-                        address: contract.address,
-                        fiscal_code: contract.fiscal_code,
-                        ple_model: contract.ple_model,
+                        company: contract.company.trim(),
+                        address: contract.address.trim(),
+                        fiscal_code: contract.fiscal_code.trim(),
+                        ple_type: contract.ple_model.trim(),
                         start_date: contract.start_date,
                         end_date: contract.end_date,
-                        notes: contract.notes || null,
+                        notes: contract.notes ? contract.notes.trim() : null,
                         status: 'attivo',
                         comodante_signature: contract.comodante_signature || null,
                         comodatario_signature: contract.comodatario_signature || null,

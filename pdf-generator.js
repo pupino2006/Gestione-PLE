@@ -152,35 +152,76 @@ const pdfGenerator = {
         // ========== CLAUSOLE CONTRATTUALI ==========
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.text("CONDIZIONI DEL CONTRATTO:", marginLeft, currentY);
+        doc.text("Condizioni di locazione/comodato", marginLeft, currentY);
         currentY += 7;
 
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
 
         const clauses = [
-            "1. Il comodante concede in uso al comodatario il mezzo sopra indicato per le attività",
-            "   consentite dalla normativa vigente in materia di sicurezza sul lavoro.",
-            "",
-            "2. Il comodatario si impegna a utilizzare il mezzo con la massima diligenza e a",
-            "   sottoporlo a regolare manutenzione secondo le indicazioni del produttore.",
-            "",
-            "3. Il comodatario è responsabile di qualsiasi danno causato al mezzo durante il",
-            "   periodo di utilizzo.",
-            "",
-            "4. Il presente contratto ha durata determinata come sopra indicato e si intende",
-            "   risolto automaticamente alla scadenza senza necessità di disdetta.",
-            "",
-            "5. Il comodatario dichiara di aver ricevuto il mezzo in perfette condizioni di",
-            "   funzionamento e di restituirlo nello stato medesimo."
+            "1. Il comodante concede in uso al comodatario il mezzo sopra indicato per le attività consentite dalla normativa vigente in materia di sicurezza sul lavoro.",
+            "2. Il comodatario si impegna a utilizzare il mezzo con la massima diligenza, nel rispetto delle istruzioni d'uso e delle prescrizioni di legge.",
+            "3. Il comodatario è tenuto a verificare quotidianamente lo stato del mezzo e a sospenderne immediatamente l'utilizzo in caso di anomalie o condizioni di pericolo.",
+            "4. Il comodatario è responsabile dei danni derivanti da uso improprio, negligenza, imperizia o impiego non conforme alla destinazione del mezzo.",
+            "5. Eventuali guasti devono essere comunicati tempestivamente al comodante; sono vietati interventi di riparazione non autorizzati.",
+            "6. Il mezzo non può essere ceduto a terzi, sublocato o utilizzato da personale non formato e non autorizzato.",
+            "7. Durante il periodo di disponibilità, il comodatario assume la custodia del mezzo e ne risponde fino alla riconsegna.",
+            "8. La durata della locazione/comodato è quella indicata nel presente documento; eventuali proroghe devono essere concordate per iscritto.",
+            "9. Alla scadenza il mezzo deve essere restituito nello stato originario, salvo il normale deterioramento d'uso.",
+            "10. Per quanto non espressamente previsto, si rinvia alle norme del codice civile in materia di comodato/locazione e alle disposizioni vigenti sulla sicurezza."
         ];
 
-        clauses.forEach(line => {
-            doc.text(line, marginLeft, currentY);
-            currentY += 5;
+        clauses.forEach((clause) => {
+            const lines = doc.splitTextToSize(clause, contentWidth);
+            lines.forEach((line) => {
+                if (currentY > 255) {
+                    doc.addPage();
+                    currentY = marginTop;
+                }
+                doc.text(line, marginLeft, currentY);
+                currentY += 5;
+            });
+            currentY += 2;
         });
 
-        currentY += 5;
+        currentY += 6;
+
+        // ========== FORO COMPETENTE E LEGGE APPLICABILE ==========
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        if (currentY > 240) {
+            doc.addPage();
+            currentY = marginTop;
+        }
+        doc.text("Foro competente e legge applicabile", marginLeft, currentY);
+        currentY += 7;
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        const foroParagraphs = [
+            "Il presente contratto è disciplinato dalla legge italiana.",
+            "Per ogni controversia relativa all'interpretazione, validità ed esecuzione del presente contratto, le parti convengono la competenza esclusiva del Foro di Teramo, ferma restando l'applicazione delle norme imperative in materia di competenza del giudice, ove previste."
+        ];
+        foroParagraphs.forEach((p) => {
+            const wrapped = doc.splitTextToSize(p, contentWidth);
+            wrapped.forEach((line) => {
+                if (currentY > 255) {
+                    doc.addPage();
+                    currentY = marginTop;
+                }
+                doc.text(line, marginLeft, currentY);
+                currentY += 5;
+            });
+            currentY += 3;
+        });
+
+        currentY += 6;
+
+        // Se lo spazio residuo non basta per blocco firme, passa a una nuova pagina.
+        if (currentY > 225) {
+            doc.addPage();
+            currentY = marginTop;
+        }
 
         // ========== FIRME ==========
         // Linea orizzontale
@@ -191,7 +232,6 @@ const pdfGenerator = {
         currentY += 10;
 
         // Firme
-        const centerX = marginLeft + contentWidth / 2;
         const leftCol = marginLeft;
         const rightCol = marginLeft + 90;
 
@@ -265,10 +305,7 @@ const pdfGenerator = {
             doc.line(rightCol, currentY + 20, rightCol + 60, currentY + 20);
         }
 
-        // ========== PIÈ DI PAGINA ==========
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text("Documento generato automaticamente dal sistema di gestione PLE", marginLeft + contentWidth / 2, 285, { align: 'center' });
+        this.addContractPdfFooters(doc, marginLeft, contentWidth);
 
         // Restituisci il PDF come base64
         const fileName = `Contratto_PLE_${contract.company.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
@@ -418,35 +455,76 @@ const pdfGenerator = {
         // ========== CLAUSOLE CONTRATTUALI ==========
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.text("CONDIZIONI DEL CONTRATTO:", marginLeft, currentY);
+        doc.text("Condizioni di locazione/comodato", marginLeft, currentY);
         currentY += 7;
 
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
 
         const clauses = [
-            "1. Il comodante concede in uso al comodatario il mezzo sopra indicato per le attività",
-            "   consentite dalla normativa vigente in materia di sicurezza sul lavoro.",
-            "",
-            "2. Il comodatario si impegna a utilizzare il mezzo con la massima diligenza e a",
-            "   sottoporlo a regolare manutenzione secondo le indicazioni del produttore.",
-            "",
-            "3. Il comodatario è responsabile di qualsiasi danno causato al mezzo durante il",
-            "   periodo di utilizzo.",
-            "",
-            "4. Il presente contratto ha durata determinata come sopra indicato e si intende",
-            "   risolto automaticamente alla scadenza senza necessità di disdetta.",
-            "",
-            "5. Il comodatario dichiara di aver ricevuto il mezzo in perfette condizioni di",
-            "   funzionamento e di restituirlo nello stato medesimo."
+            "1. Il comodante concede in uso al comodatario il mezzo sopra indicato per le attività consentite dalla normativa vigente in materia di sicurezza sul lavoro.",
+            "2. Il comodatario si impegna a utilizzare il mezzo con la massima diligenza, nel rispetto delle istruzioni d'uso e delle prescrizioni di legge.",
+            "3. Il comodatario è tenuto a verificare quotidianamente lo stato del mezzo e a sospenderne immediatamente l'utilizzo in caso di anomalie o condizioni di pericolo.",
+            "4. Il comodatario è responsabile dei danni derivanti da uso improprio, negligenza, imperizia o impiego non conforme alla destinazione del mezzo.",
+            "5. Eventuali guasti devono essere comunicati tempestivamente al comodante; sono vietati interventi di riparazione non autorizzati.",
+            "6. Il mezzo non può essere ceduto a terzi, sublocato o utilizzato da personale non formato e non autorizzato.",
+            "7. Durante il periodo di disponibilità, il comodatario assume la custodia del mezzo e ne risponde fino alla riconsegna.",
+            "8. La durata della locazione/comodato è quella indicata nel presente documento; eventuali proroghe devono essere concordate per iscritto.",
+            "9. Alla scadenza il mezzo deve essere restituito nello stato originario, salvo il normale deterioramento d'uso.",
+            "10. Per quanto non espressamente previsto, si rinvia alle norme del codice civile in materia di comodato/locazione e alle disposizioni vigenti sulla sicurezza."
         ];
 
-        clauses.forEach(line => {
-            doc.text(line, marginLeft, currentY);
-            currentY += 5;
+        clauses.forEach((clause) => {
+            const lines = doc.splitTextToSize(clause, contentWidth);
+            lines.forEach((line) => {
+                if (currentY > 255) {
+                    doc.addPage();
+                    currentY = marginTop;
+                }
+                doc.text(line, marginLeft, currentY);
+                currentY += 5;
+            });
+            currentY += 2;
         });
 
-        currentY += 5;
+        currentY += 6;
+
+        // ========== FORO COMPETENTE E LEGGE APPLICABILE ==========
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        if (currentY > 240) {
+            doc.addPage();
+            currentY = marginTop;
+        }
+        doc.text("Foro competente e legge applicabile", marginLeft, currentY);
+        currentY += 7;
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        const foroParagraphs = [
+            "Il presente contratto è disciplinato dalla legge italiana.",
+            "Per ogni controversia relativa all'interpretazione, validità ed esecuzione del presente contratto, le parti convengono la competenza esclusiva del Foro di Teramo, ferma restando l'applicazione delle norme imperative in materia di competenza del giudice, ove previste."
+        ];
+        foroParagraphs.forEach((p) => {
+            const wrapped = doc.splitTextToSize(p, contentWidth);
+            wrapped.forEach((line) => {
+                if (currentY > 255) {
+                    doc.addPage();
+                    currentY = marginTop;
+                }
+                doc.text(line, marginLeft, currentY);
+                currentY += 5;
+            });
+            currentY += 3;
+        });
+
+        currentY += 6;
+
+        // Se lo spazio residuo non basta per blocco firme, passa a una nuova pagina.
+        if (currentY > 225) {
+            doc.addPage();
+            currentY = marginTop;
+        }
 
         // ========== FIRME ==========
         // Linea orizzontale
@@ -457,7 +535,6 @@ const pdfGenerator = {
         currentY += 10;
 
         // Firme
-        const centerX = marginLeft + contentWidth / 2;
         const leftCol = marginLeft;
         const rightCol = marginLeft + 90;
 
@@ -531,10 +608,7 @@ const pdfGenerator = {
             doc.line(rightCol, currentY + 20, rightCol + 60, currentY + 20);
         }
 
-        // ========== PIÈ DI PAGINA ==========
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text("Documento generato automaticamente dal sistema di gestione PLE", marginLeft + contentWidth / 2, 285, { align: 'center' });
+        this.addContractPdfFooters(doc, marginLeft, contentWidth);
 
         // Salva il PDF
         const fileName = `Contratto_PLE_${contract.company.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
@@ -589,6 +663,36 @@ const pdfGenerator = {
             img.onerror = reject;
             img.src = url;
         });
+    },
+
+    /**
+     * Piè di pagina e numerazione su tutte le pagine del contratto (Pag. X/Y).
+     * @param {object} doc - Istanza jsPDF
+     * @param {number} marginLeft
+     * @param {number} contentWidth
+     */
+    addContractPdfFooters(doc, marginLeft, contentWidth) {
+        const totalPages = doc.internal.getNumberOfPages();
+        const pageHeight =
+            typeof doc.internal.pageSize.getHeight === 'function'
+                ? doc.internal.pageSize.getHeight()
+                : doc.internal.pageSize.height;
+        const footerY = pageHeight - 10;
+        const rightX = marginLeft + contentWidth;
+
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150, 150, 150);
+            doc.text(
+                'Documento generato automaticamente dal sistema di gestione PLE',
+                marginLeft + contentWidth / 2,
+                footerY,
+                { align: 'center' }
+            );
+            doc.text(`Pag. ${i}/${totalPages}`, rightX, footerY, { align: 'right' });
+        }
     },
 
     /**

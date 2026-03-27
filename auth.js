@@ -44,7 +44,7 @@ const auth = {
      * Verifica se l'utente è attualmente loggato
      */
     async checkCurrentUser() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await window.supabase.auth.getSession();
         if (session) {
             app.onLogin(session.user);
         } else {
@@ -132,7 +132,7 @@ const auth = {
      * @returns {object|null} - Utente corrente o null
      */
     async getCurrentUser() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await window.supabase.auth.getUser();
         return user;
     },
 
@@ -142,7 +142,7 @@ const auth = {
      */
     async resetPassword(email) {
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: window.location.origin
             });
 

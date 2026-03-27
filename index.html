@@ -167,7 +167,37 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Salva Contratto</button>
+                <!-- Sezione Firme -->
+                <div class="form-section">
+                    <h4>Firme del Contratto</h4>
+                    <p class="signature-info">Firma qui sotto per confermare il contratto di comodato d'uso.</p>
+                    
+                    <!-- Firma Comodante -->
+                    <div class="signature-container">
+                        <label>Firma Comodante (Pannelli Termici S.r.l.)</label>
+                        <div class="signature-pad-wrapper">
+                            <canvas id="signature-comodante" class="signature-pad" width="400" height="150"></canvas>
+                            <div class="signature-buttons">
+                                <button type="button" class="btn btn-secondary btn-small" onclick="clearSignature('comodante')">Cancella</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="comodante_signature" id="comodante-signature">
+                    </div>
+                    
+                    <!-- Firma Comodatario -->
+                    <div class="signature-container">
+                        <label>Firma Comodatario</label>
+                        <div class="signature-pad-wrapper">
+                            <canvas id="signature-comodatario" class="signature-pad" width="400" height="150"></canvas>
+                            <div class="signature-buttons">
+                                <button type="button" class="btn btn-secondary btn-small" onclick="clearSignature('comodatario')">Cancella</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="comodatario_signature" id="comodatario-signature">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Salva e Firma Contratto</button>
             </form>
             <div id="contract-success" class="success-message hidden"></div>
         </section>

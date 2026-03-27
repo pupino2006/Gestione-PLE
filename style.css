@@ -50,7 +50,7 @@ body {
 }
 
 .header-logo {
-    width: 120px;
+    width: 80px;
     height: auto;
     margin-bottom: 10px;
     display: block;
@@ -423,6 +423,17 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 /* Contracts List */
 .contracts-list {
     display: flex;
@@ -713,5 +724,119 @@ body {
     
     .contract-form {
         padding: 20px;
+    }
+}
+
+/* ============================================
+   STILI FIRMA DIGITALE
+   ============================================ */
+
+.signature-container {
+    margin-bottom: 25px;
+}
+
+.signature-container label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.signature-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.signature-pad-wrapper {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: var(--shadow-sm);
+}
+
+.signature-pad {
+    width: 100%;
+    height: 150px;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    cursor: crosshair;
+    touch-action: none;
+    background: white;
+}
+
+.signature-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    width: auto;
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #475569;
+}
+
+/* Stati contratto */
+.status-signed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-verified {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-returned {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Sezione rientro */
+.return-section {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.return-section h4 {
+    color: #92400e;
+    margin-bottom: 15px;
+}
+
+/* Pulsanti azione */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    flex: 1;
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
     }
 }

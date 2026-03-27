@@ -5,7 +5,7 @@
 
 import { Resend } from 'resend';
 
-const resend = new Deno.env.get('RESEND_API_KEY') || '';
+const resend = new Resend(Deno.env.get('RESEND_API_KEY') || '');
 
 Deno.serve(async (req) => {
   // Controlla che sia una richiesta POST

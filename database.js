@@ -24,6 +24,11 @@ const database = {
                         end_date: contract.end_date,
                         notes: contract.notes || null,
                         status: 'attivo',
+                        comodante_signature: contract.comodante_signature || null,
+                        comodatario_signature: contract.comodatario_signature || null,
+                        signature_date: contract.signature_date || null,
+                        return_signature: contract.return_signature || null,
+                        return_date: contract.return_date || null,
                         created_at: new Date().toISOString()
                     }
                 ])
@@ -268,6 +273,31 @@ const database = {
             return { success: true, data: data[0] };
         } catch (error) {
             console.error('Errore eliminazione contratto:', error.message);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Aggiorna le firme del contratto
+     * @param {string} contractId - ID del contratto
+     * @param {object} signatures - Dati delle firme
+     * @returns {object} - Risultato dell'operazione
+     */
+    async updateContractSignatures(contractId, signatures) {
+        try {
+            const { data, error } = await window.supabase
+                .from('contracts')
+                .update(signatures)
+                .eq('id', contractId)
+                .select();
+
+            if (error) {
+                throw error;
+            }
+
+            return { success: true, data: data[0] };
+        } catch (error) {
+            console.error('Errore aggiornamento firme:', error.message);
             return { success: false, error: error.message };
         }
     }

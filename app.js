@@ -13,6 +13,143 @@ const app = {
     init() {
         this.setupEventListeners();
         auth.init();
+        this.initSignaturePads();
+    },
+
+    /**
+     * Inizializza i pad per le firme
+     */
+    initSignaturePads() {
+        this.signaturePads = {};
+        
+        // Inizializza firma comodante
+        this.initSignaturePad('comodante');
+        // Inizializza firma comodatario
+        this.initSignaturePad('comodatario');
+    },
+
+    /**
+     * Inizializza un singolo pad per la firma
+     * @param {string} type - Tipo di firma (comodante o comodatario)
+     */
+    initSignaturePad(type) {
+        const canvas = document.getElementById(`signature-${type}`);
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Imposta lo stile del pennello
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Funzione per ottenere le coordinate
+        const getCoordinates = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches && e.touches[0]) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        };
+
+        // Eventi mouse
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+            lastX = coords.x;
+            lastY = coords.y;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+            this.saveSignature(type);
+        });
+
+        canvas.addEventListener('mouseout', () => {
+            isDrawing = false;
+        });
+
+        // Eventi touch
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+            lastX = coords.x;
+            lastY = coords.y;
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDrawing = false;
+            this.saveSignature(type);
+        });
+
+        // Salva il contesto per uso futuro
+        this.signaturePads[type] = { canvas, ctx };
+    },
+
+    /**
+     * Salva la firma come base64
+     * @param {string} type - Tipo di firma (comodante o comodatario)
+     */
+    saveSignature(type) {
+        const canvas = document.getElementById(`signature-${type}`);
+        if (!canvas) return;
+
+        const dataURL = canvas.toDataURL('image/png');
+        const input = document.getElementById(`${type}-signature`);
+        if (input) {
+            input.value = dataURL;
+        }
+    },
+
+    /**
+     * Pulisce la firma
+     * @param {string} type - Tipo di firma (comodante o comodatario)
+     */
+    clearSignature(type) {
+        const canvas = document.getElementById(`signature-${type}`);
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const input = document.getElementById(`${type}-signature`);
+        if (input) {
+            input.value = '';
+        }
     },
 
     /**
@@ -140,6 +277,16 @@ const app = {
         event.preventDefault();
 
         const form = event.target;
+        
+        // Verifica che entrambe le firme siano state inserite
+        const comodanteSignature = form.comodante_signature.value;
+        const comodatarioSignature = form.comodatario_signature.value;
+        
+        if (!comodanteSignature || !comodatarioSignature) {
+            alert('Per favore, inserisci entrambe le firme prima di salvare il contratto.');
+            return;
+        }
+        
         const contract = {
             user_id: this.currentUser.id,
             ple_model: form.ple_model.value,
@@ -148,16 +295,24 @@ const app = {
             fiscal_code: form.fiscal_code.value,
             start_date: form.start_date.value,
             end_date: form.end_date.value,
-            notes: form.notes.value
+            notes: form.notes.value,
+            comodante_signature: comodanteSignature,
+            comodatario_signature: comodatarioSignature,
+            signature_date: new Date().toISOString(),
+            status: 'firmato_preliminare'
         };
 
         const result = await database.createContract(contract);
         const successDiv = document.getElementById('contract-success');
 
         if (result.success) {
-            successDiv.textContent = 'Contratto creato con successo!';
+            successDiv.textContent = 'Contratto creato e firmato con successo!';
             successDiv.classList.remove('hidden');
             form.reset();
+            
+            // Pulisci le firme
+            this.clearSignature('comodante');
+            this.clearSignature('comodatario');
             
             // Rimuovi il messaggio dopo 3 secondi
             setTimeout(() => {
@@ -469,9 +624,30 @@ Pannelli Termici S.r.l.`;
                 card.className = 'contract-card';
                 card.onclick = () => this.showContractDetail(contract.id);
 
-                const statusClass = contract.status === 'attivo' ? 'status-active' : 'status-expired';
-                const statusText = contract.status === 'attivo' ? 'Attivo' : 
-                                   contract.status === 'verificato' ? 'Verificato' : 'Scaduto';
+                let statusClass = 'status-active';
+                let statusText = 'Attivo';
+                
+                switch(contract.status) {
+                    case 'firmato_preliminare':
+                        statusClass = 'status-signed';
+                        statusText = 'Firmato Preliminare';
+                        break;
+                    case 'verificato':
+                        statusClass = 'status-verified';
+                        statusText = 'Verificato';
+                        break;
+                    case 'rientrato':
+                        statusClass = 'status-returned';
+                        statusText = 'Rientrato';
+                        break;
+                    case 'scaduto':
+                        statusClass = 'status-expired';
+                        statusText = 'Scaduto';
+                        break;
+                    default:
+                        statusClass = 'status-active';
+                        statusText = 'Attivo';
+                }
 
                 card.innerHTML = `
                     <h3>${this.escapeHtml(contract.company)}</h3>
@@ -505,9 +681,30 @@ Pannelli Termici S.r.l.`;
 
         if (result.success) {
             const contract = result.data;
-            const statusClass = contract.status === 'attivo' ? 'status-active' : 'status-expired';
-            const statusText = contract.status === 'attivo' ? 'Attivo' : 
-                               contract.status === 'verificato' ? 'Verificato' : 'Scaduto';
+            let statusClass = 'status-active';
+            let statusText = 'Attivo';
+            
+            switch(contract.status) {
+                case 'firmato_preliminare':
+                    statusClass = 'status-signed';
+                    statusText = 'Firmato Preliminare';
+                    break;
+                case 'verificato':
+                    statusClass = 'status-verified';
+                    statusText = 'Verificato';
+                    break;
+                case 'rientrato':
+                    statusClass = 'status-returned';
+                    statusText = 'Rientrato';
+                    break;
+                case 'scaduto':
+                    statusClass = 'status-expired';
+                    statusText = 'Scaduto';
+                    break;
+                default:
+                    statusClass = 'status-active';
+                    statusText = 'Attivo';
+            }
 
             container.innerHTML = `
                 <h3>${this.escapeHtml(contract.company)}</h3>
@@ -535,6 +732,12 @@ Pannelli Termici S.r.l.`;
                     <span class="detail-label">Stato</span>
                     <span class="detail-value"><span class="contract-status ${statusClass}">${statusText}</span></span>
                 </div>
+                ${contract.signature_date ? `
+                <div class="detail-row">
+                    <span class="detail-label">Data Firma</span>
+                    <span class="detail-value">${this.formatDate(contract.signature_date)}</span>
+                </div>
+                ` : ''}
                 ${contract.notes ? `
                 <div class="detail-row">
                     <span class="detail-label">Note</span>
@@ -550,24 +753,71 @@ Pannelli Termici S.r.l.`;
             // Carica le checklist associate
             await this.loadChecklistsForContract(contractId);
             
+            // Crea il container per i pulsanti di azione
+            const actionButtonsDiv = document.createElement('div');
+            actionButtonsDiv.className = 'action-buttons';
+            
             // Aggiungi il pulsante per generare il PDF
             const generatePdfBtn = document.createElement('button');
             generatePdfBtn.id = 'generate-pdf-btn';
             generatePdfBtn.className = 'btn btn-primary';
-            generatePdfBtn.textContent = 'Genera PDF';
-            generatePdfBtn.style.marginTop = '20px';
+            generatePdfBtn.textContent = '📄 Genera PDF';
             generatePdfBtn.onclick = () => this.generateContractPDF(contractId);
-            container.appendChild(generatePdfBtn);
+            actionButtonsDiv.appendChild(generatePdfBtn);
             
             // Aggiungi il pulsante per inviare l'email
             const sendEmailBtn = document.createElement('button');
             sendEmailBtn.id = 'send-email-btn';
             sendEmailBtn.className = 'btn btn-primary';
             sendEmailBtn.textContent = '📧 Invia per Email';
-            sendEmailBtn.style.marginTop = '10px';
-            sendEmailBtn.style.marginLeft = '10px';
             sendEmailBtn.onclick = () => this.sendContractEmail(contractId);
-            container.appendChild(sendEmailBtn);
+            actionButtonsDiv.appendChild(sendEmailBtn);
+            
+            // Aggiungi il pulsante per reinvio email (solo se il contratto è firmato o verificato)
+            if (contract.status === 'firmato_preliminare' || contract.status === 'verificato' || contract.status === 'rientrato') {
+                const resendEmailBtn = document.createElement('button');
+                resendEmailBtn.id = 'resend-email-btn';
+                resendEmailBtn.className = 'btn btn-success';
+                resendEmailBtn.textContent = '🔄 Reinvia Email';
+                resendEmailBtn.onclick = () => this.resendContractEmail(contractId);
+                actionButtonsDiv.appendChild(resendEmailBtn);
+            }
+            
+            // Aggiungi il pulsante per gestire il rientro (solo se verificato)
+            if (contract.status === 'verificato') {
+                const returnBtn = document.createElement('button');
+                returnBtn.id = 'return-btn';
+                returnBtn.className = 'btn btn-warning';
+                returnBtn.textContent = '🔄 Gestisci Rientro';
+                returnBtn.onclick = () => this.showReturnSection(contractId);
+                actionButtonsDiv.appendChild(returnBtn);
+            }
+            
+            container.appendChild(actionButtonsDiv);
+            
+            // Aggiungi la sezione per il rientro (nascosta inizialmente)
+            const returnSection = document.createElement('div');
+            returnSection.id = 'return-section';
+            returnSection.className = 'return-section hidden';
+            returnSection.innerHTML = `
+                <h4>Gestione Rientro Mezzo</h4>
+                <p>Firma qui sotto per confermare il rientro del mezzo.</p>
+                <div class="signature-container">
+                    <label>Firma Rientro</label>
+                    <div class="signature-pad-wrapper">
+                        <canvas id="signature-return" class="signature-pad" width="400" height="150"></canvas>
+                        <div class="signature-buttons">
+                            <button type="button" class="btn btn-secondary btn-small" onclick="app.clearSignature('return')">Cancella</button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="return_signature" id="return-signature">
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-primary" onclick="app.confirmReturn('${contractId}')">Conferma Rientro</button>
+                    <button type="button" class="btn btn-secondary" onclick="app.hideReturnSection()">Annulla</button>
+                </div>
+            `;
+            container.appendChild(returnSection);
         } else {
             container.innerHTML = `
                 <div class="error-message">
@@ -861,7 +1111,130 @@ Pannelli Termici S.r.l.`;
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = 'Genera PDF';
+                btn.textContent = '📄 Genera PDF';
+            }
+        }
+    },
+
+    /**
+     * Mostra la sezione per gestire il rientro
+     * @param {string} contractId - ID del contratto
+     */
+    showReturnSection(contractId) {
+        const returnSection = document.getElementById('return-section');
+        if (returnSection) {
+            returnSection.classList.remove('hidden');
+            // Inizializza il pad per la firma di rientro
+            this.initSignaturePad('return');
+        }
+    },
+
+    /**
+     * Nasconde la sezione per gestire il rientro
+     */
+    hideReturnSection() {
+        const returnSection = document.getElementById('return-section');
+        if (returnSection) {
+            returnSection.classList.add('hidden');
+            this.clearSignature('return');
+        }
+    },
+
+    /**
+     * Conferma il rientro del mezzo
+     * @param {string} contractId - ID del contratto
+     */
+    async confirmReturn(contractId) {
+        const returnSignature = document.getElementById('return-signature').value;
+        
+        if (!returnSignature) {
+            alert('Per favore, inserisci la firma per confermare il rientro.');
+            return;
+        }
+
+        const btn = document.querySelector('#return-section .btn-primary');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Salvataggio...';
+        }
+
+        try {
+            const result = await database.updateContractSignatures(contractId, {
+                return_signature: returnSignature,
+                return_date: new Date().toISOString(),
+                status: 'rientrato'
+            });
+
+            if (result.success) {
+                alert('Rientro confermato con successo!');
+                // Ricarica i dettagli del contratto
+                await this.showContractDetail(contractId);
+            } else {
+                alert('Errore nella conferma del rientro: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Errore conferma rientro:', error);
+            alert('Errore nella conferma del rientro: ' + error.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Conferma Rientro';
+            }
+        }
+    },
+
+    /**
+     * Reinvia il contratto per email
+     * @param {string} contractId - ID del contratto
+     */
+    async resendContractEmail(contractId) {
+        const btn = document.getElementById('resend-email-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Reinvio in corso...';
+        }
+
+        try {
+            // Carica i dati del contratto
+            const result = await database.getContractById(contractId);
+            
+            if (result.success) {
+                const contract = result.data;
+                
+                // Genera il PDF come base64
+                const pdfResult = await pdfGenerator.generateContractPDFAsBase64(contract);
+                
+                if (pdfResult.success) {
+                    // Prepara i dati per l'email
+                    const emailData = {
+                        to: this.currentUser.email,
+                        subject: `Contratto PLE - ${contract.company} - Aggiornamento`,
+                        body: `Gentile ${this.currentUser.email},\n\nin allegato trovi il contratto aggiornato di comodato d'uso PLE per ${contract.company}.\n\nMezzo: ${this.getPleTypeLabel(contract.ple_model)}\nPeriodo: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}\nStato: ${contract.status}\n\nCordiali saluti,\nPannelli Termici S.r.l.`,
+                        attachmentName: pdfResult.fileName,
+                        attachmentBase64: pdfResult.base64
+                    };
+
+                    // Invia l'email via Edge Function
+                    const sendResult = await this.callEdgeFunction('send-email', emailData);
+                    
+                    if (sendResult.success) {
+                        alert('Email reinviata con successo!');
+                    } else {
+                        alert('Errore nel reinvio dell\'email: ' + sendResult.error);
+                    }
+                } else {
+                    alert('Errore nella generazione del PDF');
+                }
+            } else {
+                alert('Errore nel caricamento dei dati del contratto');
+            }
+        } catch (error) {
+            console.error('Errore reinvio email:', error);
+            alert('Errore nel reinvio dell\'email: ' + error.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '🔄 Reinvia Email';
             }
         }
     }
@@ -874,3 +1247,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Esporta l'app
 window.app = app;
+
+// Funzione globale per pulire la firma
+window.clearSignature = function(type) {
+    app.clearSignature(type);
+};

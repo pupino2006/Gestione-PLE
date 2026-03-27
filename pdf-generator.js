@@ -234,15 +234,35 @@ const pdfGenerator = {
             doc.text("37136 Verona", stampX + 25, stampY + 18, { align: 'center' });
             doc.text("C.F./P.IVA 00454730235", stampX + 25, stampY + 23, { align: 'center' });
 
-            // Firma.png sovrapposta al timbro
-            const firmaData = await this.getImageAsBase64('Firma.png');
-            doc.addImage(firmaData, 'PNG', stampX + 2, stampY + 3, 30, 15);
+            // Usa la firma digitale del comodante se disponibile, altrimenti usa Firma.png
+            if (contract.comodante_signature) {
+                doc.addImage(contract.comodante_signature, 'PNG', stampX + 2, stampY + 3, 30, 15);
+            } else {
+                const firmaData = await this.getImageAsBase64('Firma.png');
+                doc.addImage(firmaData, 'PNG', stampX + 2, stampY + 3, 30, 15);
+            }
         } catch (e) {
             console.error('Errore caricamento firma/timbro:', e);
             // Firma alternativa se immagine non disponibile
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.text("_________________", leftCol + 20, currentY);
+        }
+        
+        // Firma del comodatario (a destra)
+        if (contract.comodatario_signature) {
+            try {
+                doc.addImage(contract.comodatario_signature, 'PNG', rightCol, currentY - 8, 50, 25);
+            } catch (e) {
+                console.error('Errore caricamento firma comodatario:', e);
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text("_________________", rightCol + 20, currentY);
+            }
+        } else {
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text("_________________", rightCol + 20, currentY);
         }
 
         // ========== PIÈ DI PAGINA ==========
@@ -480,15 +500,35 @@ const pdfGenerator = {
             doc.text("37136 Verona", stampX + 25, stampY + 18, { align: 'center' });
             doc.text("C.F./P.IVA 00454730235", stampX + 25, stampY + 23, { align: 'center' });
 
-            // Firma.png sovrapposta al timbro
-            const firmaData = await this.getImageAsBase64('Firma.png');
-            doc.addImage(firmaData, 'PNG', stampX + 2, stampY + 3, 30, 15);
+            // Usa la firma digitale del comodante se disponibile, altrimenti usa Firma.png
+            if (contract.comodante_signature) {
+                doc.addImage(contract.comodante_signature, 'PNG', stampX + 2, stampY + 3, 30, 15);
+            } else {
+                const firmaData = await this.getImageAsBase64('Firma.png');
+                doc.addImage(firmaData, 'PNG', stampX + 2, stampY + 3, 30, 15);
+            }
         } catch (e) {
             console.error('Errore caricamento firma/timbro:', e);
             // Firma alternativa se immagine non disponibile
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.text("_________________", leftCol + 20, currentY);
+        }
+        
+        // Firma del comodatario (a destra)
+        if (contract.comodatario_signature) {
+            try {
+                doc.addImage(contract.comodatario_signature, 'PNG', rightCol, currentY - 8, 50, 25);
+            } catch (e) {
+                console.error('Errore caricamento firma comodatario:', e);
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text("_________________", rightCol + 20, currentY);
+            }
+        } else {
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text("_________________", rightCol + 20, currentY);
         }
 
         // ========== PIÈ DI PAGINA ==========

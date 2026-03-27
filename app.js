@@ -1080,9 +1080,7 @@ Pannelli Termici S.r.l.`;
      */
     async callEdgeFunction(functionName, data) {
         try {
-            const supabaseUrl = window.SB_URL;
             const supabaseKey = window.SB_KEY;
-            const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
 
             const { data: sessionData } = await window.supabase.auth.getSession();
             const accessToken = sessionData?.session?.access_token;
@@ -1094,36 +1092,23 @@ Pannelli Termici S.r.l.`;
                 };
             }
 
-            const headers = {
-                'Content-Type': 'application/json',
-                apikey: supabaseKey,
-                Authorization: `Bearer ${accessToken}`
-            };
-
-            const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(data)
+            const { data: result, error } = await window.supabase.functions.invoke(functionName, {
+                body: data,
+                headers: {
+                    apikey: supabaseKey,
+                    Authorization: `Bearer ${accessToken}`
+                }
             });
 
-            const raw = await response.text();
-            let parsed = null;
-            try {
-                parsed = raw ? JSON.parse(raw) : null;
-            } catch (_) {
-                parsed = null;
-            }
-
-            if (!response.ok) {
-                const details = parsed?.error || raw || `HTTP ${response.status}`;
+            if (error) {
+                const details = error?.context?.error || error?.message || 'Errore chiamata Edge Function';
                 return {
                     success: false,
-                    error: `Edge Function ${functionName} failed (${response.status}): ${details}`
+                    error: `Edge Function ${functionName} failed: ${details}`
                 };
             }
 
-            if (parsed) return parsed;
-            return { success: true };
+            return result || { success: false, error: 'Risposta vuota dalla Edge Function' };
         } catch (error) {
             console.error('Errore chiamata Edge Function:', error);
             

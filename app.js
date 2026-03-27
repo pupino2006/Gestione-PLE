@@ -289,7 +289,7 @@ const app = {
         
         const contract = {
             user_id: this.currentUser.id,
-            ple_type: form.ple_model.value,
+            ple_model: form.ple_model.value,
             company: form.company.value,
             address: form.address.value,
             fiscal_code: form.fiscal_code.value,

@@ -1075,9 +1075,10 @@ Pannelli Termici S.r.l.`;
      * @returns {Promise<object>} - Risultato
      */
     async callEdgeFunction(functionName, data) {
-        // URL della Edge Function (da configurare con l'URL effettivo di Supabase)
-        // In produzione, sostituire con l'URL effettivo del progetto Supabase
-        const supabaseUrl = localStorage.getItem('supabase_url') || 'https://your-project.supabase.co';
+        // Recupera URL e Key direttamente dall'istanza supabase attiva
+        const supabaseUrl = window.supabase.supabaseUrl;
+        const supabaseKey = window.supabase.supabaseKey;
+        
         const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
 
         try {
@@ -1085,16 +1086,17 @@ Pannelli Termici S.r.l.`;
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('supabase_anon_key') || ''}`
+                    'Authorization': `Bearer ${supabaseKey}`
                 },
                 body: JSON.stringify(data)
             });
 
+            const result = await response.json();
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(result.error || `HTTP error! status: ${response.status}`);
             }
 
-            const result = await response.json();
             return result;
         } catch (error) {
             console.error('Errore chiamata Edge Function:', error);

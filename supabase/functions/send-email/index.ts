@@ -3,28 +3,36 @@
  * Utilizza Resend per l'invio di email con allegato PDF
  */
 
-import { Resend } from 'resend';
+import { Resend } from 'npm:resend';
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY') || '');
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 Deno.serve(async (req) => {
-  // Controlla che sia una richiesta POST
+  // Gestione preflight CORS
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ success: false, error: 'Metodo non consentito. Usa POST.' }),
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
   try {
     const body = await req.json();
-    
+    console.log(`Ricevuta richiesta invio mail per: ${body.to}`);
+
     const {
-      to,           // Email destinatario
-      subject,      // Oggetto dell'email
-      body: emailBody, // Corpo dell'email
-      attachmentName, // Nome del file allegato (opzionale)
-      attachmentBase64 // PDF in base64 (opzionale)
+      to,
+      subject,
+      body: emailBody,
+      attachmentName,
+      attachmentBase64
     } = body;
 
     // Valida i campi obbligatori
@@ -34,13 +42,26 @@ Deno.serve(async (req) => {
           success: false, 
           error: 'Parametri mancanti: to, subject e body sono obbligatori' 
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const resendKey = Deno.env.get('RESEND_API_KEY');
+    const resendFrom = Deno.env.get('RESEND_FROM_EMAIL') ?? 'Gestione PLE <onboarding@resend.dev>';
+
+    if (!resendKey) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'RESEND_API_KEY non configurata. Imposta il secret nella Edge Function.'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Configura l'email
-    const emailData = {
-      from: 'Gestione PLE <onboarding@resend.dev>',
+    const emailData: any = {
+      from: resendFrom,
       to: to,
       subject: subject,
       html: `
@@ -68,35 +89,27 @@ Deno.serve(async (req) => {
     }
 
     // Invia l'email usando Resend
-    if (resend) {
-      const resendClient = new Resend(resend);
-      const result = await resendClient.emails.send(emailData);
-      
+    const resend = new Resend(resendKey);
+    const { data, error } = await resend.emails.send(emailData);
+
+    if (error) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Email inviata con successo',
-          data: result
+        JSON.stringify({
+          success: false,
+          error: `Resend error: ${error.message ?? JSON.stringify(error)}`
         }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    } else {
-      // Modalità di test (senza Resend configurato)
-      console.log('Email da inviare (modalità test):', emailData);
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Email preparata (modalità test - RESEND_API_KEY non configurata)',
-          preview: {
-            to: to,
-            subject: subject,
-            hasAttachment: !!attachmentBase64
-          }
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Email inviata con successo',
+        data
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Errore nell\'invio dell\'email:', error);
@@ -104,9 +117,9 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: 'Errore nell\'invio dell\'email: ' + error.message 
+        error: 'Errore nell\'invio dell\'email: ' + (error?.message ?? String(error))
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -1080,16 +1080,48 @@ Pannelli Termici S.r.l.`;
      */
     async callEdgeFunction(functionName, data) {
         try {
-            // Usa invoke ufficiale del client Supabase: gestisce header/token corretti.
-            const { data: result, error } = await window.supabase.functions.invoke(functionName, {
-                body: data
-            });
+            const supabaseUrl = window.SB_URL;
+            const supabaseKey = window.SB_KEY;
+            const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
 
-            if (error) {
-                return { success: false, error: error.message || 'Errore chiamata Edge Function' };
+            const { data: sessionData } = await window.supabase.auth.getSession();
+            const accessToken = sessionData?.session?.access_token;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                apikey: supabaseKey
+            };
+
+            if (accessToken) {
+                headers.Authorization = `Bearer ${accessToken}`;
+            } else {
+                headers.Authorization = `Bearer ${supabaseKey}`;
             }
 
-            return result || { success: false, error: 'Risposta vuota dalla Edge Function' };
+            const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data)
+            });
+
+            const raw = await response.text();
+            let parsed = null;
+            try {
+                parsed = raw ? JSON.parse(raw) : null;
+            } catch (_) {
+                parsed = null;
+            }
+
+            if (!response.ok) {
+                const details = parsed?.error || raw || `HTTP ${response.status}`;
+                return {
+                    success: false,
+                    error: `Edge Function ${functionName} failed (${response.status}): ${details}`
+                };
+            }
+
+            if (parsed) return parsed;
+            return { success: true };
         } catch (error) {
             console.error('Errore chiamata Edge Function:', error);
             

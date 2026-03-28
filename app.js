@@ -324,6 +324,7 @@ const app = {
                         sessionStorage.removeItem('ple_prefill_contract_id');
                     }
                 }
+                this.applyChecklistDefaults();
                 break;
             case 'contracts':
                 await this.loadContracts();
@@ -501,11 +502,7 @@ const app = {
             successDiv.textContent = 'Checklist salvata con successo!';
             successDiv.classList.remove('hidden');
             form.reset();
-            
-            // Resetta i pulsanti Si/No
-            document.querySelectorAll('.btn-response').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            this.applyChecklistDefaults();
             
             setTimeout(() => {
                 successDiv.classList.add('hidden');
@@ -523,6 +520,7 @@ const app = {
     setResponse(button, value) {
         const inputName = button.getAttribute('data-input');
         const input = document.getElementById(inputName);
+        if (!input) return;
         
         // Aggiorna il valore dell'input nascosto
         input.value = value;
@@ -535,6 +533,24 @@ const app = {
         
         // Aggiungi la classe active al pulsante cliccato
         button.classList.add('active');
+    },
+
+    /**
+     * Imposta tutte le risposte checklist su "Sì" (UI + valori hidden).
+     */
+    applyChecklistDefaults() {
+        const form = document.getElementById('checklist-form');
+        if (!form) return;
+        for (let i = 1; i <= 8; i++) {
+            const field = form.elements[`response_${i}`];
+            if (field) field.value = 'si';
+            const siBtn = Array.from(form.querySelectorAll('.btn-response')).find((btn) => {
+                const inputName = btn.getAttribute('data-input');
+                const oc = btn.getAttribute('onclick') || '';
+                return inputName === `response_${i}` && oc.includes('si') && !oc.includes('no');
+            });
+            if (siBtn) this.setResponse(siBtn, 'si');
+        }
     },
 
     /**
@@ -623,9 +639,7 @@ const app = {
                 if (sendResult.success) {
                     alert('Checklist salvata e inviata per email con successo!');
                     form.reset();
-                    document.querySelectorAll('.btn-response').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
+                    this.applyChecklistDefaults();
                 } else {
                     alert('Checklist salvata, ma errore nell\'invio dell\'email: ' + sendResult.error);
                 }

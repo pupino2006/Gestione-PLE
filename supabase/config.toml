@@ -1,5 +1,0 @@
-[functions.send-email]
-verify_jwt = false
-
-[functions.send-checklist-email]
-verify_jwt = false

@@ -4,6 +4,7 @@
  */
 
 import { Resend } from 'npm:resend';
+import { buildPleEmailHtml, plainBodyToHtml } from '../_shared/ple-email-template.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +33,8 @@ Deno.serve(async (req) => {
       subject,
       body: emailBody,
       attachmentName,
-      attachmentBase64
+      attachmentBase64,
+      pdfUrl
     } = body;
 
     // Valida i campi obbligatori
@@ -59,23 +61,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Configura l'email
+    const hasAttachment = !!(attachmentBase64 && attachmentName);
+    const safePdfUrl = typeof pdfUrl === 'string' && /^https?:\/\//i.test(pdfUrl) ? pdfUrl : null;
+
     const emailData: any = {
       from: resendFrom,
       to: to,
       subject: subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #003366;">Gestione PLE - Pannelli Termici S.r.l.</h2>
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            ${emailBody.replace(/\n/g, '<br>')}
-          </div>
-          <p style="color: #666; font-size: 12px;">
-            Questo è un messaggio automatico generato dal sistema di gestione PLE.<br>
-            Pannelli Termici S.r.l. - Via dell'Alpo n°27 - 37136 Verona (VR)
-          </p>
-        </div>
-      `
+      html: buildPleEmailHtml({
+        headerTitle: 'CONTRATTO PLE',
+        bodyHtml: plainBodyToHtml(emailBody),
+        hasPdfAttachment: hasAttachment,
+        pdfUrl: safePdfUrl,
+        pdfButtonLabel: '📄 Scarica contratto PDF'
+      })
     };
 
     // Aggiungi l'allegato se presente

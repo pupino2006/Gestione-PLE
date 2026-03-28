@@ -30,33 +30,6 @@ const app = {
     },
 
     /**
-     * Allinea buffer e dimensioni CSS del canvas firma (evita tratto spostato su touch / width:100%).
-     * @param {HTMLCanvasElement} canvas
-     */
-    fitSignatureCanvas(canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const cssW = rect.width;
-        const cssH = rect.height;
-        if (cssW < 2 || cssH < 2) return;
-
-        const dpr = window.devicePixelRatio || 1;
-        const w = Math.max(1, Math.floor(cssW * dpr));
-        const h = Math.max(1, Math.floor(cssH * dpr));
-
-        if (canvas.width === w && canvas.height === h) return;
-
-        const ctx = canvas.getContext('2d');
-        canvas.width = w;
-        canvas.height = h;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-    },
-
-    /**
      * Inizializza un singolo pad per la firma
      * @param {string} type - Tipo di firma (comodante o comodatario)
      */
@@ -64,47 +37,34 @@ const app = {
         const canvas = document.getElementById(`signature-${type}`);
         if (!canvas) return;
 
-        const scheduleFit = () => {
-            requestAnimationFrame(() => this.fitSignatureCanvas(canvas));
-        };
-        this.fitSignatureCanvas(canvas);
-        scheduleFit();
-
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
 
-        const applyBrushStyle = () => {
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-        };
-        applyBrushStyle();
+        // Imposta lo stile del pennello
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-        // Coordinate in spazio CSS (coerenti con ctx scalato per devicePixelRatio)
+        // Funzione per ottenere le coordinate
         const getCoordinates = (e) => {
             const rect = canvas.getBoundingClientRect();
-            const touch = e.touches && e.touches[0];
-            const cx = touch ? touch.clientX : e.clientX;
-            const cy = touch ? touch.clientY : e.clientY;
+            if (e.touches && e.touches[0]) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
             return {
-                x: cx - rect.left,
-                y: cy - rect.top
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
             };
         };
 
-        if (canvas.dataset.pleSigBound === '1') {
-            this.signaturePads[type] = { canvas, ctx };
-            return;
-        }
-        canvas.dataset.pleSigBound = '1';
-
         // Eventi mouse
         canvas.addEventListener('mousedown', (e) => {
-            this.fitSignatureCanvas(canvas);
-            applyBrushStyle();
             isDrawing = true;
             const coords = getCoordinates(e);
             lastX = coords.x;
@@ -134,8 +94,6 @@ const app = {
         // Eventi touch
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            this.fitSignatureCanvas(canvas);
-            applyBrushStyle();
             isDrawing = true;
             const coords = getCoordinates(e);
             lastX = coords.x;
@@ -187,16 +145,7 @@ const app = {
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-        const dpr = window.devicePixelRatio || 1;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
         
         const input = document.getElementById(`${type}-signature`);
         if (input) {
@@ -314,17 +263,6 @@ const app = {
                 await this.loadContractsForChecklist();
                 document.getElementById('checklist-form').reset();
                 document.getElementById('checklist-success').classList.add('hidden');
-                {
-                    const preId = sessionStorage.getItem('ple_prefill_contract_id');
-                    if (preId) {
-                        const sel = document.getElementById('checklist-contract');
-                        if (sel && [...sel.options].some((o) => o.value === preId)) {
-                            sel.value = preId;
-                        }
-                        sessionStorage.removeItem('ple_prefill_contract_id');
-                    }
-                }
-                this.applyChecklistDefaults();
                 break;
             case 'contracts':
                 await this.loadContracts();
@@ -502,7 +440,11 @@ const app = {
             successDiv.textContent = 'Checklist salvata con successo!';
             successDiv.classList.remove('hidden');
             form.reset();
-            this.applyChecklistDefaults();
+            
+            // Resetta i pulsanti Si/No
+            document.querySelectorAll('.btn-response').forEach(btn => {
+                btn.classList.remove('active');
+            });
             
             setTimeout(() => {
                 successDiv.classList.add('hidden');
@@ -520,7 +462,6 @@ const app = {
     setResponse(button, value) {
         const inputName = button.getAttribute('data-input');
         const input = document.getElementById(inputName);
-        if (!input) return;
         
         // Aggiorna il valore dell'input nascosto
         input.value = value;
@@ -533,24 +474,6 @@ const app = {
         
         // Aggiungi la classe active al pulsante cliccato
         button.classList.add('active');
-    },
-
-    /**
-     * Imposta tutte le risposte checklist su "Sì" (UI + valori hidden).
-     */
-    applyChecklistDefaults() {
-        const form = document.getElementById('checklist-form');
-        if (!form) return;
-        for (let i = 1; i <= 8; i++) {
-            const field = form.elements[`response_${i}`];
-            if (field) field.value = 'si';
-            const siBtn = Array.from(form.querySelectorAll('.btn-response')).find((btn) => {
-                const inputName = btn.getAttribute('data-input');
-                const oc = btn.getAttribute('onclick') || '';
-                return inputName === `response_${i}` && oc.includes('si') && !oc.includes('no');
-            });
-            if (siBtn) this.setResponse(siBtn, 'si');
-        }
     },
 
     /**
@@ -639,7 +562,9 @@ const app = {
                 if (sendResult.success) {
                     alert('Checklist salvata e inviata per email con successo!');
                     form.reset();
-                    this.applyChecklistDefaults();
+                    document.querySelectorAll('.btn-response').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
                 } else {
                     alert('Checklist salvata, ma errore nell\'invio dell\'email: ' + sendResult.error);
                 }
@@ -785,8 +710,6 @@ Pannelli Termici S.r.l.`;
         this.showSection('contract-detail');
 
         const result = await database.getContractById(contractId);
-        const checklistsRes = await database.getChecklistsByContract(contractId);
-        const hasChecklist = checklistsRes.success && checklistsRes.data.length > 0;
 
         if (result.success) {
             const contract = result.data;
@@ -892,21 +815,13 @@ Pannelli Termici S.r.l.`;
                 actionButtonsDiv.appendChild(resendEmailBtn);
             }
             
-            // Dopo la checklist il contratto diventa "verificato": il rientro richiede quella verifica
-            if (contract.status === 'firmato_preliminare') {
-                const checklistBtn = document.createElement('button');
-                checklistBtn.className = 'btn btn-secondary';
-                checklistBtn.textContent = '📋 Checklist di verifica (obbligatoria per il rientro)';
-                checklistBtn.onclick = () => this.goToChecklistForContract(contractId);
-                actionButtonsDiv.appendChild(checklistBtn);
-            }
-
+            // Aggiungi il pulsante per gestire il rientro (solo se verificato)
             if (contract.status === 'verificato') {
                 const returnBtn = document.createElement('button');
                 returnBtn.id = 'return-btn';
                 returnBtn.className = 'btn btn-warning';
                 returnBtn.textContent = '🔄 Gestisci Rientro';
-                returnBtn.onclick = () => this.showReturnSection(contractId, hasChecklist);
+                returnBtn.onclick = () => this.showReturnSection(contractId);
                 actionButtonsDiv.appendChild(returnBtn);
             }
             
@@ -918,8 +833,7 @@ Pannelli Termici S.r.l.`;
             returnSection.className = 'return-section hidden';
             returnSection.innerHTML = `
                 <h4>Gestione Rientro Mezzo</h4>
-                <div id="return-checklist-banner"></div>
-                <p>Firma qui sotto per confermare il rientro del mezzo, dopo la verifica in checklist.</p>
+                <p>Firma qui sotto per confermare il rientro del mezzo.</p>
                 <div class="signature-container">
                     <label>Firma Rientro</label>
                     <div class="signature-pad-wrapper">
@@ -1243,55 +1157,16 @@ Pannelli Termici S.r.l.`;
     },
 
     /**
-     * Apre la sezione checklist con contratto preselezionato (per verifica pre-rientro)
-     * @param {string} contractId - ID del contratto
-     */
-    goToChecklistForContract(contractId) {
-        sessionStorage.setItem('ple_prefill_contract_id', contractId);
-        this.showSection('checklist');
-    },
-
-    /**
      * Mostra la sezione per gestire il rientro
      * @param {string} contractId - ID del contratto
-     * @param {boolean} hasChecklist - se esiste già una checklist sul contratto
      */
-    showReturnSection(contractId, hasChecklist = true) {
+    showReturnSection(contractId) {
         const returnSection = document.getElementById('return-section');
-        if (!returnSection) return;
-
-        returnSection.classList.remove('hidden');
-
-        const banner = document.getElementById('return-checklist-banner');
-        if (banner) {
-            if (!hasChecklist) {
-                banner.innerHTML = `
-                    <div style="background:#fff3cd;border-left:4px solid #856404;padding:12px;margin-bottom:15px;border-radius:6px;">
-                        <strong>Verifica obbligatoria.</strong> Non risulta alcuna checklist su questo contratto.
-                        Usa il pulsante <em>Checklist di verifica</em> nel dettaglio, poi torna qui.
-                    </div>`;
-            } else {
-                banner.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-                database.getChecklistsByContract(contractId).then((res) => {
-                    if (!res.success || !res.data.length) {
-                        banner.innerHTML = `
-                            <div style="background:#fff3cd;border-left:4px solid #856404;padding:12px;margin-bottom:15px;border-radius:6px;">
-                                Checklist non trovata. Compila la verifica prima del rientro.
-                            </div>`;
-                        return;
-                    }
-                    const last = res.data[0];
-                    const d = this.formatDate(last.created_at);
-                    banner.innerHTML = `
-                        <div style="background:#e8f4fd;border-left:4px solid #004a99;padding:12px;margin-bottom:15px;border-radius:6px;">
-                            <strong>Verifica mezzo registrata</strong><br>
-                            Ultima checklist: <strong>${d}</strong>. Puoi firmare il rientro qui sotto.
-                        </div>`;
-                });
-            }
+        if (returnSection) {
+            returnSection.classList.remove('hidden');
+            // Inizializza il pad per la firma di rientro
+            this.initSignaturePad('return');
         }
-
-        this.initSignaturePad('return');
     },
 
     /**
@@ -1314,12 +1189,6 @@ Pannelli Termici S.r.l.`;
         
         if (!returnSignature) {
             alert('Per favore, inserisci la firma per confermare il rientro.');
-            return;
-        }
-
-        const clRes = await database.getChecklistsByContract(contractId);
-        if (!clRes.success || !clRes.data.length) {
-            alert('Per confermare il rientro è obbligatoria una checklist di verifica sul contratto. Compila la checklist dal menu dedicato.');
             return;
         }
 

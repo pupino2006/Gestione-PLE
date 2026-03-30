@@ -257,22 +257,17 @@ const pdfGenerator = {
 
         // Timbro e firma del comodante (a sinistra)
         try {
-            // Timbro rettangolare
-            doc.setDrawColor(102, 0, 0);
-            doc.setLineWidth(0.5);
             const stampX = leftCol;
             const stampY = currentY;
             const stampWidth = 55;
-            const stampHeight = 30;
-            doc.rect(stampX, stampY, stampWidth, stampHeight);
             
             // Testo timbro
             doc.setFontSize(7);
-            doc.setTextColor(102, 0, 0);
-            doc.text("PANNELLI TERMICI S.r.l.", stampX + stampWidth / 2, stampY + 8, { align: 'center' });
-            doc.text("Via dell'Alpo, 27", stampX + stampWidth / 2, stampY + 13, { align: 'center' });
-            doc.text("Roseto Degli Abruzzi (TE)", stampX + stampWidth / 2, stampY + 18, { align: 'center' });
-            doc.text("C.F./P.IVA 00454730235", stampX + stampWidth / 2, stampY + 24, { align: 'center' });
+            doc.setTextColor(0, 51, 102); // Blu
+            doc.text("PANNELLI TERMICI S.r.l.", stampX + stampWidth / 2, stampY + 6, { align: 'center' });
+            doc.text("Via dell'Alpo, 27", stampX + stampWidth / 2, stampY + 10, { align: 'center' });
+            doc.text("64026 Roseto Degli Abruzzi (TE)", stampX + stampWidth / 2, stampY + 14, { align: 'center' });
+            doc.text("C.F./P.IVA 00454730235", stampX + stampWidth / 2, stampY + 18, { align: 'center' });
 
             // Usa la firma digitale del comodante se disponibile, altrimenti usa Firma.png
             if (contract.comodante_signature) {
@@ -560,22 +555,17 @@ const pdfGenerator = {
 
         // Timbro e firma del comodante (a sinistra)
         try {
-            // Timbro rettangolare
-            doc.setDrawColor(102, 0, 0);
-            doc.setLineWidth(0.5);
             const stampX = leftCol;
             const stampY = currentY;
             const stampWidth = 55;
-            const stampHeight = 30;
-            doc.rect(stampX, stampY, stampWidth, stampHeight);
             
             // Testo timbro
             doc.setFontSize(7);
-            doc.setTextColor(102, 0, 0);
-            doc.text("PANNELLI TERMICI S.r.l.", stampX + stampWidth / 2, stampY + 8, { align: 'center' });
-            doc.text("Via dell'Alpo, 27", stampX + stampWidth / 2, stampY + 13, { align: 'center' });
-            doc.text("Roseto Degli Abruzzi (TE)", stampX + stampWidth / 2, stampY + 18, { align: 'center' });
-            doc.text("C.F./P.IVA 00454730235", stampX + stampWidth / 2, stampY + 24, { align: 'center' });
+            doc.setTextColor(0, 51, 102); // Blu
+            doc.text("PANNELLI TERMICI S.r.l.", stampX + stampWidth / 2, stampY + 6, { align: 'center' });
+            doc.text("Via dell'Alpo, 27", stampX + stampWidth / 2, stampY + 10, { align: 'center' });
+            doc.text("64026 Roseto Degli Abruzzi (TE)", stampX + stampWidth / 2, stampY + 14, { align: 'center' });
+            doc.text("C.F./P.IVA 00454730235", stampX + stampWidth / 2, stampY + 18, { align: 'center' });
 
             // Usa la firma digitale del comodante se disponibile, altrimenti usa Firma.png
             if (contract.comodante_signature) {

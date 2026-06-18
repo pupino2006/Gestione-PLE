@@ -25,14 +25,16 @@
         function initializeApp() {
             console.log('initializeApp() called');
             
-            // Attendi che Supabase sia caricato
+            // Attendi che Supabase SDK sia caricato
             if (window.supabase && window.supabase.createClient) {
-                console.log('Supabase SDK trovato');
-                const supabaseClient = window.supabase.createClient(window.SB_URL, window.SB_KEY);
-                window.supabaseClient = supabaseClient;
-                console.log('Supabase client creato:', !!window.supabaseClient);
+                console.log('Supabase SDK trovato, creando client...');
+                // Crea il client Supabase e sovrascivi window.supabase
+                const supabaseSDK = window.supabase;
+                window.supabase = supabaseSDK.createClient(window.SB_URL, window.SB_KEY);
+                window.supabaseClient = window.supabase; // Alias
+                console.log('Supabase client creato:', !!window.supabase.from);
             } else {
-                console.warn('Supabase SDK non trovato, continuando comunque...');
+                console.warn('Supabase SDK non trovato');
             }
             
             // Inizializza l'app

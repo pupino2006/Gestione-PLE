@@ -213,7 +213,6 @@ const database = {
                 .from('checklists')
                 .insert([
                     {
-                        user_id: checklist.user_id,
                         contract_id: checklist.contract_id,
                         check_1: checklist.check_1,
                         check_2: checklist.check_2,

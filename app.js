@@ -3,6 +3,9 @@
  * Coordina tutte le funzionalita dell'applicazione
  */
 
+// UUID fisso per modalità demo (auth disattivata) — compatibile con colonna user_id UUID
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 const app = {
     currentUser: null,
     currentSection: 'home', // Partenza direttamente dalla home
@@ -16,9 +19,9 @@ const app = {
         
         this.setupEventListeners();
         
-        // Crea utente demo e salta auth
+        // Crea utente demo e salta auth (id deve essere un UUID valido per Supabase)
         this.currentUser = {
-            id: 'demo-user-' + Date.now(),
+            id: DEMO_USER_ID,
             email: 'demo@gestione-ple.local',
             name: 'Operatore Demo'
         };

@@ -15,29 +15,30 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Script applicazione con defer per caricare dopo il DOM -->
-    <script defer src="auth.js?v=2"></script>
-    <script defer src="database.js?v=2"></script>
-    <script defer src="pdf-generator.js?v=2"></script>
-    <script defer src="app.js?v=2"></script>
+    <script defer src="database.js?v=3"></script>
+    <script defer src="pdf-generator.js?v=3"></script>
+    <script defer src="app.js?v=3"></script>
     
     <!-- Script per attendere Supabase e inizializzare app -->
     <script defer>
+        let appInitialized = false;
+
         function initializeApp() {
+            if (appInitialized) return;
+            appInitialized = true;
+
             console.log('initializeApp() called');
             
-            // Attendi che Supabase SDK sia caricato
             if (window.supabase && window.supabase.createClient) {
                 console.log('Supabase SDK trovato, creando client...');
-                // Crea il client Supabase e sovrascivi window.supabase
                 const supabaseSDK = window.supabase;
                 window.supabase = supabaseSDK.createClient(window.SB_URL, window.SB_KEY);
-                window.supabaseClient = window.supabase; // Alias
+                window.supabaseClient = window.supabase;
                 console.log('Supabase client creato:', !!window.supabase.from);
             } else {
                 console.warn('Supabase SDK non trovato');
             }
             
-            // Inizializza l'app
             if (window.app && window.app.init && typeof window.app.init === 'function') {
                 console.log('Inizializzazione app...');
                 window.app.init();
@@ -47,13 +48,7 @@
             }
         }
         
-        // Chiama initializeApp quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', initializeApp);
-        
-        // Se il DOM è già pronto (in caso di caricamento da cache)
-        if (document.readyState !== 'loading') {
-            setTimeout(initializeApp, 100);
-        }
     </script>
 </head>
 <body>
@@ -94,13 +89,6 @@
                 setTimeout(() => this.toggleCustomMezzo(), 100);
             }
         };
-        
-        window.auth = window.auth || {
-            logout: function() {
-                console.log('[QUEUED] logout()');
-                setTimeout(() => this.logout(), 100);
-            }
-        };
     </script>
     
     <div class="app-container">
@@ -114,7 +102,7 @@
         <!-- Home Section (Dashboard) -->
         <section id="home-section" class="section">
             <div class="user-info">
-                <p>Benvenuto, <span id="user-email"></span></p>
+                <p>Benvenuto nella piattaforma Gestione PLE</p>
             </div>
             
             <div class="dashboard-grid">
@@ -137,13 +125,6 @@
                     <div class="card-icon">📋</div>
                     <h3>Contratti</h3>
                     <p>Consulta i contratti effettuati</p>
-                </button>
-
-                <!-- Logout -->
-                <button class="dashboard-card logout-card" onclick="auth.logout()">
-                    <div class="card-icon">🚪</div>
-                    <h3>Logout</h3>
-                    <p>Esci dall'applicazione</p>
                 </button>
             </div>
         </section>

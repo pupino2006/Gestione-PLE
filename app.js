@@ -3,40 +3,22 @@
  * Coordina tutte le funzionalita dell'applicazione
  */
 
-// UUID fisso per modalità demo (auth disattivata) — compatibile con colonna user_id UUID
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
-
 const app = {
-    currentUser: null,
-    currentSection: 'home', // Partenza direttamente dalla home
+    currentSection: 'home',
     notificationEmail: 'geom.rip@gmail.com',
+    _initialized: false,
 
     /**
      * Inizializza l'applicazione
      */
     init() {
+        if (this._initialized) return;
+        this._initialized = true;
+
         console.log('App init - avvio applicazione');
         
         this.setupEventListeners();
-        
-        // Crea utente demo e salta auth (id deve essere un UUID valido per Supabase)
-        this.currentUser = {
-            id: DEMO_USER_ID,
-            email: 'demo@gestione-ple.local',
-            name: 'Operatore Demo'
-        };
-        
-        console.log('Utente demo creato:', this.currentUser);
-        
-        // Aggiorna UI
-        const userEmailEl = document.getElementById('user-email');
-        if (userEmailEl) {
-            userEmailEl.textContent = this.currentUser.email;
-        }
-        
         this.initSignaturePads();
-        
-        // Mostra la home
         this.showSection('home');
         
         console.log('App init - completato');
@@ -274,46 +256,6 @@ const app = {
     },
 
     /**
-     * Gestisce il login
-     * @param {Event} event - Evento del form
-     */
-    async handleLogin(event) {
-        event.preventDefault();
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('login-error');
-
-        errorDiv.textContent = '';
-
-        const result = await auth.login(email, password);
-
-        if (!result.success) {
-            errorDiv.textContent = 'Errore: ' + result.error + '. Riprova.';
-        }
-    },
-
-    /**
-     * Gestisce il login effettuato (legacy - non più usato)
-     * @param {object} user - Utente loggato
-     */
-    onLogin(user) {
-        this.currentUser = user;
-        const userEmailEl = document.getElementById('user-email');
-        if (userEmailEl) {
-            userEmailEl.textContent = user.email;
-        }
-    },
-
-    /**
-     * Gestisce il logout (legacy - non più usato)
-     */
-    onLogout() {
-        this.currentUser = null;
-        this.showSection('home');
-    },
-
-    /**
      * Mostra una sezione specifica
      * @param {string} section - Nome della sezione
      */
@@ -342,10 +284,6 @@ const app = {
         // Carica i dati specifici per ogni sezione
         switch (section) {
             case 'home':
-                // Aggiorna le info utente
-                if (this.currentUser) {
-                    document.getElementById('user-email').textContent = this.currentUser.email;
-                }
                 break;
             case 'new-contract':
                 // Resetta il form
@@ -1291,21 +1229,11 @@ Pannelli Termici S.r.l.`;
         try {
             const supabaseKey = window.SB_KEY;
 
-            const { data: sessionData } = await window.supabase.auth.getSession();
-            const accessToken = sessionData?.session?.access_token;
-
-            if (!accessToken) {
-                return {
-                    success: false,
-                    error: 'Sessione non valida o scaduta. Effettua di nuovo il login e riprova.'
-                };
-            }
-
             const { data: result, error } = await window.supabase.functions.invoke(functionName, {
                 body: data,
                 headers: {
                     apikey: supabaseKey,
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${supabaseKey}`
                 }
             });
 

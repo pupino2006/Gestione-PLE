@@ -1,7 +1,20 @@
--- Migration: policy RLS per accesso anonimo (auth disattivata nell'app)
--- Esegui questo script nel SQL Editor di Supabase
+-- Migration: app libera senza autenticazione
+-- Esegui nel SQL Editor di Supabase: https://supabase.com/dashboard/project/fhijxhjsxkwtufzcuxuc/sql/new
 
--- Rimuove tutte le policy esistenti su contracts e ne crea di permissive per anon
+-- Rimuove vincoli e colonna user_id (eredità del vecchio sistema login)
+ALTER TABLE public.contracts
+  DROP CONSTRAINT IF EXISTS contracts_user_id_fkey;
+
+ALTER TABLE public.checklists
+  DROP CONSTRAINT IF EXISTS checklists_user_id_fkey;
+
+ALTER TABLE public.contracts
+  DROP COLUMN IF EXISTS user_id;
+
+ALTER TABLE public.checklists
+  DROP COLUMN IF EXISTS user_id;
+
+-- Policy RLS permissive per accesso anonimo
 DO $$
 DECLARE
   pol RECORD;
@@ -25,7 +38,6 @@ CREATE POLICY "anon_insert_contracts" ON public.contracts
 CREATE POLICY "anon_update_contracts" ON public.contracts
   FOR UPDATE TO anon USING (true) WITH CHECK (true);
 
--- Stessa cosa per checklists
 DO $$
 DECLARE
   pol RECORD;
@@ -49,7 +61,7 @@ CREATE POLICY "anon_insert_checklists" ON public.checklists
 CREATE POLICY "anon_update_checklists" ON public.checklists
   FOR UPDATE TO anon USING (true) WITH CHECK (true);
 
--- Storage: permetti upload e lettura sul bucket ple-photos
+-- Storage bucket ple-photos
 DO $$
 DECLARE
   pol RECORD;
@@ -57,19 +69,16 @@ BEGIN
   FOR pol IN
     SELECT policyname FROM pg_policies
     WHERE schemaname = 'storage' AND tablename = 'objects'
-      AND policyname LIKE '%ple%'
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', pol.policyname);
   END LOOP;
 END $$;
 
 CREATE POLICY "anon_select_ple_photos" ON storage.objects
-  FOR SELECT TO anon
-  USING (bucket_id = 'ple-photos');
+  FOR SELECT TO anon USING (bucket_id = 'ple-photos');
 
 CREATE POLICY "anon_insert_ple_photos" ON storage.objects
-  FOR INSERT TO anon
-  WITH CHECK (bucket_id = 'ple-photos');
+  FOR INSERT TO anon WITH CHECK (bucket_id = 'ple-photos');
 
 CREATE POLICY "anon_update_ple_photos" ON storage.objects
   FOR UPDATE TO anon

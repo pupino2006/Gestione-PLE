@@ -15,16 +15,6 @@ const app = {
         this.setupEventListeners();
         auth.init();
         this.initSignaturePads();
-        
-        // Se autenticazione disattivata, mostra la home direttamente
-        if (auth.AUTHENTICATION_DISABLED) {
-            // Crea utente demo
-            const demoUser = {
-                id: 'demo-user-' + Date.now(),
-                email: 'demo@gestione-ple.local'
-            };
-            this.onLogin(demoUser);
-        }
     },
 
     /**

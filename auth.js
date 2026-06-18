@@ -28,10 +28,20 @@ const auth = {
                 name: 'Operatore Demo'
             };
             
-            // Auto-login con utente fake
+            // Auto-login con utente fake - con delay maggiore
             setTimeout(() => {
-                app.onLogin(fakeUser);
-            }, 500);
+                if (window.app && window.app.onLogin) {
+                    console.log('Calling onLogin con utente demo');
+                    app.onLogin(fakeUser);
+                } else {
+                    console.error('app.onLogin non disponibile, riprovo...');
+                    setTimeout(() => {
+                        if (window.app && window.app.onLogin) {
+                            app.onLogin(fakeUser);
+                        }
+                    }, 1000);
+                }
+            }, 100);
             
             return;
         }

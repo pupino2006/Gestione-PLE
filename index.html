@@ -13,6 +13,38 @@
     </script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Script applicazione con defer per caricare dopo il DOM -->
+    <script defer src="auth.js"></script>
+    <script defer src="database.js"></script>
+    <script defer src="pdf-generator.js"></script>
+    <script defer src="app.js"></script>
+    
+    <!-- Inizializza Supabase e app dopo il caricamento -->
+    <script defer>
+        function initializeApp() {
+            // Inizializza il client Supabase
+            if (window.supabase) {
+                window.supabase = window.supabase.createClient(window.SB_URL, window.SB_KEY);
+                console.log('Supabase inizializzato');
+            }
+            
+            // Inizializza l'app
+            if (window.app && window.app.init) {
+                console.log('Inizializzazione app...');
+                app.init();
+                console.log('App inizializzata');
+            }
+        }
+        
+        // Chiama initializeApp quando il DOM è pronto
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        
+        // Se il DOM è già pronto (in caso di caricamento da cache)
+        if (document.readyState !== 'loading') {
+            initializeApp();
+        }
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -375,24 +407,5 @@
             </div>
         </section>
     </div>
-
-    <!-- Inizializza Supabase -->
-    <script>
-        // Inizializza il client Supabase
-        window.supabase = window.supabase.createClient(window.SB_URL, window.SB_KEY);
-        console.log('Supabase inizializzato');
-    </script>
-    
-    <script src="auth.js"></script>
-    <script src="database.js"></script>
-    <script src="pdf-generator.js"></script>
-    <script src="app.js"></script>
-    
-    <!-- Inizializza l'app -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            app.init();
-        });
-    </script>
 </body>
 </html>

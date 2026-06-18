@@ -12,9 +12,31 @@ const app = {
      * Inizializza l'applicazione
      */
     init() {
+        console.log('App init - avvio applicazione');
+        
         this.setupEventListeners();
-        auth.init();
+        
+        // Crea utente demo e salta auth
+        this.currentUser = {
+            id: 'demo-user-' + Date.now(),
+            email: 'demo@gestione-ple.local',
+            name: 'Operatore Demo'
+        };
+        
+        console.log('Utente demo creato:', this.currentUser);
+        
+        // Aggiorna UI
+        const userEmailEl = document.getElementById('user-email');
+        if (userEmailEl) {
+            userEmailEl.textContent = this.currentUser.email;
+        }
+        
         this.initSignaturePads();
+        
+        // Mostra la home
+        this.showSection('home');
+        
+        console.log('App init - completato');
     },
 
     /**
@@ -235,12 +257,6 @@ const app = {
      * Configura gli event listener
      */
     setupEventListeners() {
-        // Form di login
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            loginForm.addEventListener('submit', this.handleLogin.bind(this));
-        }
-
         // Form nuovo contratto
         const contractForm = document.getElementById('contract-form');
         if (contractForm) {
@@ -275,27 +291,23 @@ const app = {
     },
 
     /**
-     * Gestisce il login effettuato
+     * Gestisce il login effettuato (legacy - non più usato)
      * @param {object} user - Utente loggato
      */
     onLogin(user) {
         this.currentUser = user;
-        document.getElementById('user-email').textContent = user.email;
-        this.showSection('home');
+        const userEmailEl = document.getElementById('user-email');
+        if (userEmailEl) {
+            userEmailEl.textContent = user.email;
+        }
     },
 
     /**
-     * Gestisce il logout
+     * Gestisce il logout (legacy - non più usato)
      */
     onLogout() {
         this.currentUser = null;
         this.showSection('home');
-        
-        // Resetta i form
-        const contractForm = document.getElementById('contract-form');
-        const checklistForm = document.getElementById('checklist-form');
-        if (contractForm) contractForm.reset();
-        if (checklistForm) checklistForm.reset();
     },
 
     /**

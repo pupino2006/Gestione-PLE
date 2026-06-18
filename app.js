@@ -392,7 +392,6 @@ const app = {
         }
         
         const contract = {
-            user_id: this.currentUser.id,
             ple_model: pleModel,
             company: form.company.value,
             address: form.address.value,
@@ -465,7 +464,7 @@ const app = {
         const select = document.getElementById('checklist-contract');
         select.innerHTML = '<option value="">Seleziona un contratto</option>';
 
-        const result = await database.getContracts(this.currentUser.id);
+        const result = await database.getContracts();
 
         if (result.success && result.data.length > 0) {
             result.data.forEach(contract => {
@@ -510,7 +509,6 @@ const app = {
 
         // Costruisci l'oggetto checklist con le nuove risposte Si/No e le note
         const checklist = {
-            user_id: this.currentUser.id,
             contract_id: contractId,
             // Risposte Si/No (true = Si, false = No)
             check_1: form.response_1.value === 'si',
@@ -714,7 +712,6 @@ const app = {
 
         // Costruisci l'oggetto checklist
         const checklist = {
-            user_id: this.currentUser.id,
             contract_id: contractId,
             check_1: form.response_1.value === 'si',
             check_2: form.response_2.value === 'si',
@@ -838,7 +835,7 @@ Pannelli Termici S.r.l.`;
         const container = document.getElementById('contracts-list');
         container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
-        const result = await database.getContracts(this.currentUser.id);
+        const result = await database.getContracts();
 
         if (result.success) {
             if (result.data.length === 0) {

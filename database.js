@@ -35,7 +35,6 @@ const database = {
                 .from('contracts')
                 .insert([
                     {
-                        user_id: contract.user_id,
                         company: contract.company.trim(),
                         address: contract.address.trim(),
                         fiscal_code: contract.fiscal_code.trim(),
@@ -67,15 +66,14 @@ const database = {
     },
 
     /**
-     * Recupera tutti i contratti dell'utente corrente
-     * @returns {array} - Lista dei contratti
+     * Recupera tutti i contratti
+     * @returns {array} - Lista di tutti i contratti
      */
-    async getContracts(userId) {
+    async getContracts() {
         try {
             const { data, error } = await window.supabase
                 .from('contracts')
                 .select('*')
-                .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
             if (error) {

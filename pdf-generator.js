@@ -701,6 +701,211 @@ const pdfGenerator = {
     },
 
     /**
+     * Genera il PDF della checklist con annotazioni
+     * @param {object} contract - Dati del contratto
+     * @param {object} checklist - Dati della checklist
+     * @returns {Promise<object>} - Risultato con base64 del PDF
+     */
+    async generateChecklistPDFAsBase64(contract, checklist) {
+        // Carica la libreria jsPDF se non presente
+        if (typeof window.jspdf === 'undefined') {
+            await this.loadJsPDF();
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const marginLeft = 20;
+        const marginRight = 20;
+        const marginTop = 20;
+        const contentWidth = 170;
+        let currentY = marginTop;
+
+        // ========== INTESTAZIONE ==========
+        try {
+            const logoData = await this.getImageAsBase64('pt.png');
+            doc.addImage(logoData, 'PNG', marginLeft, currentY, 30, 20);
+        } catch (e) {
+            console.error('Errore caricamento logo:', e);
+        }
+
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Sistema di Gestione Qualità", 120, currentY + 5);
+        doc.text("Modulo rev 0", 120, currentY + 10);
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text("PANNELLI TERMICI S.r.l.", 90, currentY + 18);
+
+        currentY += 30;
+
+        // ========== TITOLO ==========
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 51, 102);
+        doc.text("CHECKLIST VERIFICA PLE - RIENTRO MEZZO", marginLeft + contentWidth / 2, currentY, { align: 'center' });
+
+        currentY += 12;
+
+        // Linea divisoria
+        doc.setDrawColor(0, 51, 102);
+        doc.setLineWidth(0.5);
+        doc.line(marginLeft, currentY, marginLeft + contentWidth, currentY);
+
+        currentY += 10;
+
+        // ========== INFORMAZIONI CONTRATTO ==========
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Informazioni Contratto", marginLeft, currentY);
+        currentY += 7;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Azienda: ${contract.company || '-'}`, marginLeft, currentY);
+        currentY += 5;
+        doc.text(`Mezzo: ${contract.ple_model || '-'}`, marginLeft, currentY);
+        currentY += 5;
+        doc.text(`Data Contratto: ${this.formatDate(contract.start_date)} - ${this.formatDate(contract.end_date)}`, marginLeft, currentY);
+        currentY += 5;
+        doc.text(`Data Verifica: ${this.formatDate(checklist.created_at)}`, marginLeft, currentY);
+
+        currentY += 10;
+
+        // ========== DOMANDE CHECKLIST ==========
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Risultati Checklist", marginLeft, currentY);
+        currentY += 7;
+
+        const checklistItems = [
+            'Controllo visivo generale della struttura',
+            'Verifica funzionamento comandi idraulici',
+            'Controllo pneumatici e freni',
+            'Verifica batteria e caricabatteria',
+            'Controllo cestello e parapetti',
+            'Verifica sensori di sicurezza',
+            'Controllo libretto uso e manutenzione',
+            'Prova di sollevamento a vuoto'
+        ];
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+
+        for (let i = 1; i <= 8; i++) {
+            // Controlla se abbiamo spazio, altrimenti aggiungi una pagina
+            if (currentY > 250) {
+                doc.addPage();
+                currentY = marginTop;
+            }
+
+            // Numero e domanda
+            const checkKey = `check_${i}`;
+            const noteKey = `note_${i}`;
+            const result = checklist[checkKey] ? 'SI' : 'NO';
+            const color = checklist[checkKey] ? [22, 163, 74] : [220, 38, 38]; // Verde per SI, Rosso per NO
+
+            // Background colore per la risposta
+            doc.setFillColor(color[0], color[1], color[2]);
+            doc.rect(marginLeft, currentY, 15, 8, 'F');
+            
+            // Testo domanda e risposta
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text(result, marginLeft + 4, currentY + 5.5);
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${i}. ${checklistItems[i - 1]}`, marginLeft + 20, currentY + 5.5);
+
+            currentY += 10;
+
+            // Note se presenti
+            if (checklist[noteKey]) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                const noteLines = doc.splitTextToSize(`Nota: ${checklist[noteKey]}`, contentWidth - 30);
+                noteLines.forEach(line => {
+                    if (currentY > 255) {
+                        doc.addPage();
+                        currentY = marginTop;
+                    }
+                    doc.text(line, marginLeft + 5, currentY);
+                    currentY += 4;
+                });
+                currentY += 2;
+            }
+        }
+
+        currentY += 5;
+
+        // ========== NOTE GENERALI ==========
+        if (checklist.notes) {
+            if (currentY > 240) {
+                doc.addPage();
+                currentY = marginTop;
+            }
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text("Note Aggiuntive", marginLeft, currentY);
+            currentY += 7;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            const notesLines = doc.splitTextToSize(checklist.notes, contentWidth);
+            notesLines.forEach(line => {
+                if (currentY > 255) {
+                    doc.addPage();
+                    currentY = marginTop;
+                }
+                doc.text(line, marginLeft, currentY);
+                currentY += 4;
+            });
+        }
+
+        // ========== FIRMA ==========
+        if (currentY > 220) {
+            doc.addPage();
+            currentY = marginTop;
+        }
+
+        currentY += 10;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        const today = this.formatDate(new Date().toISOString());
+        doc.text(`Roseto Degli Abruzzi, ${today}`, marginLeft + contentWidth / 2, currentY, { align: 'center' });
+
+        currentY += 12;
+
+        doc.setFontSize(9);
+        doc.text("Firma Responsabile Verifica", marginLeft + contentWidth / 2, currentY, { align: 'center' });
+
+        currentY += 8;
+        doc.setLineWidth(0.3);
+        doc.line(marginLeft + 30, currentY, marginLeft + contentWidth - 30, currentY);
+
+        this.addContractPdfFooters(doc, marginLeft, contentWidth);
+
+        // Restituisci il PDF come base64
+        const fileName = `Checklist_PLE_${contract.company.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+        
+        return { 
+            success: true, 
+            fileName: fileName,
+            base64: pdfBase64 
+        };
+    },
+
+    /**
      * Restituisce l'etichetta per il tipo di PLE
      * @param {string} type - Tipo di PLE
      * @returns {string} - Etichetta

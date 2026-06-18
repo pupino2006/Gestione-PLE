@@ -37,84 +37,162 @@ const app = {
         const canvas = document.getElementById(`signature-${type}`);
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d');
+        // Imposta il canvas per il touch
+        canvas.style.touchAction = 'none';
+        canvas.style.cursor = 'crosshair';
+
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
 
-        // Imposta lo stile del pennello
+        // Imposta lo stile del pennello - aumentato per migliore visibilità
         ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3; // Aumentato da 2 per miglior visibilità
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
+        
+        // Migliora il rendering
+        ctx.globalAlpha = 1;
 
-        // Funzione per ottenere le coordinate
+        // Funzione per ottenere le coordinate con migliore precisione
         const getCoordinates = (e) => {
             const rect = canvas.getBoundingClientRect();
-            if (e.touches && e.touches[0]) {
-                return {
-                    x: e.touches[0].clientX - rect.left,
-                    y: e.touches[0].clientY - rect.top
-                };
+            let clientX, clientY;
+            
+            if (e.touches && e.touches.length > 0) {
+                // Touch event
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else if (e.clientX !== undefined) {
+                // Mouse event
+                clientX = e.clientX;
+                clientY = e.clientY;
+            } else {
+                return null;
             }
+            
             return {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
+                x: clientX - rect.left,
+                y: clientY - rect.top
             };
         };
 
+        // Funzione per disegnare una linea
+        const drawLine = (fromX, fromY, toX, toY) => {
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+        };
+
         // Eventi mouse
-        canvas.addEventListener('mousedown', (e) => {
+        canvas.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'mouse' && e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+            e.preventDefault();
+            
             isDrawing = true;
             const coords = getCoordinates(e);
-            lastX = coords.x;
-            lastY = coords.y;
+            if (coords) {
+                lastX = coords.x;
+                lastY = coords.y;
+            }
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const coords = getCoordinates(e);
+            if (coords) {
+                drawLine(lastX, lastY, coords.x, coords.y);
+                lastX = coords.x;
+                lastY = coords.y;
+            }
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            isDrawing = false;
+            this.saveSignature(type);
+        });
+
+        canvas.addEventListener('pointercancel', (e) => {
+            isDrawing = false;
+        });
+
+        canvas.addEventListener('pointerleave', (e) => {
+            if (isDrawing) {
+                isDrawing = false;
+            }
+        });
+
+        // Aggiungi il listener per i touch fallback per i browser vecchi
+        canvas.addEventListener('touchstart', (e) => {
+            if (isDrawing) return; // Evita duplicati se pointer events sono supportati
+            e.preventDefault();
+            
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            if (coords) {
+                lastX = coords.x;
+                lastY = coords.y;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const coords = getCoordinates(e);
+            if (coords) {
+                drawLine(lastX, lastY, coords.x, coords.y);
+                lastX = coords.x;
+                lastY = coords.y;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            isDrawing = false;
+            this.saveSignature(type);
+        }, { passive: false });
+
+        // Aggiungi il listener per i mouse fallback
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.pointerType !== undefined) return; // Se pointer events sono supportati, salta
+            e.preventDefault();
+            
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            if (coords) {
+                lastX = coords.x;
+                lastY = coords.y;
+            }
         });
 
         canvas.addEventListener('mousemove', (e) => {
             if (!isDrawing) return;
+            e.preventDefault();
+            
             const coords = getCoordinates(e);
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-            lastX = coords.x;
-            lastY = coords.y;
+            if (coords) {
+                drawLine(lastX, lastY, coords.x, coords.y);
+                lastX = coords.x;
+                lastY = coords.y;
+            }
         });
 
-        canvas.addEventListener('mouseup', () => {
+        canvas.addEventListener('mouseup', (e) => {
             isDrawing = false;
             this.saveSignature(type);
         });
 
-        canvas.addEventListener('mouseout', () => {
-            isDrawing = false;
-        });
-
-        // Eventi touch
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isDrawing = true;
-            const coords = getCoordinates(e);
-            lastX = coords.x;
-            lastY = coords.y;
-        });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (!isDrawing) return;
-            const coords = getCoordinates(e);
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-            lastX = coords.x;
-            lastY = coords.y;
-        });
-
-        canvas.addEventListener('touchend', () => {
-            isDrawing = false;
-            this.saveSignature(type);
+        canvas.addEventListener('mouseout', (e) => {
+            if (isDrawing) {
+                isDrawing = false;
+            }
         });
 
         // Salva il contesto per uso futuro
@@ -288,9 +366,22 @@ const app = {
             return;
         }
         
+        // Gestisci il mezzo personalizzato
+        let pleModel = form.ple_model.value;
+        if (pleModel === 'custom') {
+            const customInput = document.getElementById('custom-mezzo-input');
+            const customMezzo = customInput.value.trim();
+            if (!customMezzo) {
+                alert('Per favore, specifica il nome del mezzo personalizzato.');
+                customInput.focus();
+                return;
+            }
+            pleModel = customMezzo;
+        }
+        
         const contract = {
             user_id: this.currentUser.id,
-            ple_model: form.ple_model.value,
+            ple_model: pleModel,
             company: form.company.value,
             address: form.address.value,
             fiscal_code: form.fiscal_code.value,
@@ -455,6 +546,23 @@ const app = {
     },
 
     /**
+     * Attiva/disattiva il campo di input per il mezzo personalizzato
+     */
+    toggleCustomMezzo() {
+        const select = document.getElementById('contract-ple-model');
+        const customContainer = document.getElementById('custom-mezzo-container');
+        const customInput = document.getElementById('custom-mezzo-input');
+        
+        if (select.value === 'custom') {
+            customContainer.classList.remove('hidden');
+            customInput.focus();
+        } else {
+            customContainer.classList.add('hidden');
+            customInput.value = '';
+        }
+    },
+
+    /**
      * Imposta la risposta Si/No per una domanda
      * @param {HTMLElement} button - Pulsante cliccato
      * @param {string} value - Valore ('si' o 'no')
@@ -479,6 +587,87 @@ const app = {
     /**
      * Salva la checklist e poi la invia per email
      */
+    /**
+     * Scarica il PDF della checklist dal form corrente
+     */
+    async downloadChecklistPDF() {
+        const form = document.getElementById('checklist-form');
+        const contractId = form.contract_id.value;
+
+        if (!contractId) {
+            alert('Per favore, seleziona un contratto prima di scaricare il PDF.');
+            return;
+        }
+
+        // Verifica che tutte le risposte siano state selezionate
+        for (let i = 1; i <= 8; i++) {
+            const response = form[`response_${i}`].value;
+            if (!response) {
+                alert(`Seleziona una risposta (Si/No) per la domanda ${i}`);
+                return;
+            }
+        }
+
+        try {
+            // Recupera i dati del contratto
+            const contractResult = await database.getContractById(contractId);
+            if (!contractResult.success) {
+                throw new Error('Errore nel caricamento dei dati del contratto');
+            }
+            const contract = contractResult.data;
+
+            // Costruisci l'oggetto checklist dai dati del form
+            const checklist = {
+                created_at: new Date().toISOString(),
+                check_1: form.response_1.value === 'si',
+                check_2: form.response_2.value === 'si',
+                check_3: form.response_3.value === 'si',
+                check_4: form.response_4.value === 'si',
+                check_5: form.response_5.value === 'si',
+                check_6: form.response_6.value === 'si',
+                check_7: form.response_7.value === 'si',
+                check_8: form.response_8.value === 'si',
+                note_1: form.note_1.value || null,
+                note_2: form.note_2.value || null,
+                note_3: form.note_3.value || null,
+                note_4: form.note_4.value || null,
+                note_5: form.note_5.value || null,
+                note_6: form.note_6.value || null,
+                note_7: form.note_7.value || null,
+                note_8: form.note_8.value || null,
+                notes: form.notes.value || null
+            };
+
+            // Genera il PDF
+            const pdfResult = await pdfGenerator.generateChecklistPDFAsBase64(contract, checklist);
+
+            if (pdfResult.success) {
+                // Scarica il PDF
+                this.downloadBase64PDF(pdfResult.base64, pdfResult.fileName);
+                alert('PDF della checklist scaricato con successo!');
+            } else {
+                throw new Error('Errore nella generazione del PDF');
+            }
+        } catch (error) {
+            console.error('Errore download PDF checklist:', error);
+            alert('Errore nella generazione del PDF: ' + error.message);
+        }
+    },
+
+    /**
+     * Scarica un PDF da base64
+     * @param {string} base64 - Contenuto del PDF in base64
+     * @param {string} fileName - Nome del file
+     */
+    downloadBase64PDF(base64, fileName) {
+        const link = document.createElement('a');
+        link.href = 'data:application/pdf;base64,' + base64;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    },
+
     async sendChecklistFromForm() {
         const form = document.getElementById('checklist-form');
         
@@ -818,6 +1007,20 @@ Pannelli Termici S.r.l.`;
             // Aggiungi il pulsante per gestire il rientro (solo se verificato)
             if (contract.status === 'verificato') {
                 const returnBtn = document.createElement('button');
+                returnBtn.id = 'return-btn';
+                returnBtn.className = 'btn btn-warning';
+                returnBtn.textContent = '🔄 Gestisci Rientro';
+                returnBtn.onclick = () => this.showReturnSection(contractId);
+                actionButtonsDiv.appendChild(returnBtn);
+            }
+            
+            // Aggiungi il pulsante per cancellare il contratto
+            const deleteBtn = document.createElement('button');
+            deleteBtn.id = 'delete-btn';
+            deleteBtn.className = 'btn btn-danger';
+            deleteBtn.textContent = '🗑️ Annulla e Cancella';
+            deleteBtn.onclick = () => this.deleteContract(contractId);
+            actionButtonsDiv.appendChild(deleteBtn);
                 returnBtn.id = 'return-btn';
                 returnBtn.className = 'btn btn-warning';
                 returnBtn.textContent = '🔄 Gestisci Rientro';
@@ -1172,6 +1375,46 @@ Pannelli Termici S.r.l.`;
     /**
      * Nasconde la sezione per gestire il rientro
      */
+    /**
+     * Cancella un contratto
+     * @param {string} contractId - ID del contratto da cancellare
+     */
+    async deleteContract(contractId) {
+        const confirmed = confirm('Sei sicuro di voler annullare e cancellare questo contratto? Questa azione non potrà essere annullata.');
+        if (!confirmed) {
+            return;
+        }
+
+        const btn = document.getElementById('delete-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Cancellazione in corso...';
+        }
+
+        try {
+            const result = await database.deleteContract(contractId);
+
+            if (result.success) {
+                alert('Contratto cancellato con successo!');
+                // Torna alla lista dei contratti
+                await this.showSection('contracts');
+            } else {
+                alert('Errore nella cancellazione del contratto: ' + result.error);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🗑️ Annulla e Cancella';
+                }
+            }
+        } catch (error) {
+            console.error('Errore cancellazione contratto:', error);
+            alert('Errore nella cancellazione del contratto: ' + error.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '🗑️ Annulla e Cancella';
+            }
+        }
+    },
+
     hideReturnSection() {
         const returnSection = document.getElementById('return-section');
         if (returnSection) {

@@ -105,15 +105,19 @@
                     <h4>Mezzo per Noleggio</h4>
                     <div class="form-group">
                         <label for="contract-ple-model">Seleziona Mezzo</label>
-                        <select id="contract-ple-model" name="ple_model" required>
+                        <select id="contract-ple-model" name="ple_model" required onchange="app.toggleCustomMezzo()">
                             <option value="">Seleziona il mezzo</option>
                             <option value="PLE Haulotte Verticale">PLE Haulotte Verticale</option>
                             <option value="Cesab MAK 45">Cesab MAK 45</option>
                             <option value="Cesab Blitz 16">Cesab Blitz 16</option>
                             <option value="Hyster 28">Hyster 28</option>
                             <option value="Robustus">Robustus</option>
-                            <option value=" "></option>
+                            <option value="custom">Altro - Specifica il mezzo</option>
                         </select>
+                    </div>
+                    <div class="form-group hidden" id="custom-mezzo-container">
+                        <label for="custom-mezzo-input">Nome del Mezzo</label>
+                        <input type="text" id="custom-mezzo-input" placeholder="Es: Piattaforma XYZ, Sollevatore ABC..." maxlength="100">
                     </div>
                 </div>
                 
@@ -362,6 +366,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Salva Checklist</button>
+                <button type="button" class="btn btn-success" onclick="app.downloadChecklistPDF()">📥 Scarica PDF Checklist</button>
                 <button type="button" class="btn btn-success" onclick="app.sendChecklistFromForm()">📧 Invia Checklist per Email</button>
             </form>
             <div id="checklist-success" class="success-message hidden"></div>

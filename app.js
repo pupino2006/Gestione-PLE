@@ -5,7 +5,7 @@
 
 const app = {
     currentUser: null,
-    currentSection: 'login',
+    currentSection: 'home', // Partenza direttamente dalla home
     notificationEmail: 'geom.rip@gmail.com',
 
     /**
@@ -289,12 +289,13 @@ const app = {
      */
     onLogout() {
         this.currentUser = null;
-        this.showSection('login');
+        this.showSection('home');
         
         // Resetta i form
-        document.getElementById('login-form').reset();
-        document.getElementById('contract-form').reset();
-        document.getElementById('checklist-form').reset();
+        const contractForm = document.getElementById('contract-form');
+        const checklistForm = document.getElementById('checklist-form');
+        if (contractForm) contractForm.reset();
+        if (checklistForm) checklistForm.reset();
     },
 
     /**
@@ -309,7 +310,6 @@ const app = {
 
         // Mostra la sezione richiesta
         const sectionMap = {
-            'login': 'login-section',
             'home': 'home-section',
             'new-contract': 'new-contract-section',
             'checklist': 'checklist-section',

@@ -18,8 +18,9 @@ const auth = {
             console.log('Autenticazione disattivata - accesso diretto abilitato');
             
             // Crea un utente fake per bypassare il login
+            // Usa un UUID fisso per l'utente demo
             const fakeUser = {
-                id: 'demo-user-' + Date.now(),
+                id: '00000000-0000-0000-0000-000000000000',
                 email: 'demo@gestione-ple.local',
                 name: 'Operatore Demo'
             };
@@ -96,7 +97,7 @@ const auth = {
             // Autenticazione disattivata - accetta qualsiasi credenziale
             console.log('Autenticazione disattivata - login senza verifica');
             const demoUser = {
-                id: 'demo-user-' + Date.now(),
+                id: '00000000-0000-0000-0000-000000000000',
                 email: email || 'demo@gestione-ple.local',
                 name: 'Operatore'
             };

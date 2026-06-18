@@ -1,6 +1,8 @@
 /**
  * Modulo di Autenticazione Supabase
  * Gestisce login, logout e verifica stato utente
+ * 
+ * ⚠️ NOTA: Autenticazione disattivata - accesso diretto senza credenziali
  */
 
 // Debug: verifica Supabase
@@ -8,10 +10,32 @@ console.log('Auth.js - window.supabase:', window.supabase);
 console.log('Auth.js - window.supabase.auth:', window.supabase?.auth);
 
 const auth = {
+    // Flag per disattivare l'autenticazione
+    AUTHENTICATION_DISABLED: true,
+
     /**
      * Inizializza il listener per i cambiamenti di stato di autenticazione
      */
     init() {
+        if (this.AUTHENTICATION_DISABLED) {
+            // Autenticazione disattivata - accesso diretto
+            console.log('Autenticazione disattivata - accesso diretto abilitato');
+            
+            // Crea un utente fake per bypassare il login
+            const fakeUser = {
+                id: 'demo-user-' + Date.now(),
+                email: 'demo@gestione-ple.local',
+                name: 'Operatore Demo'
+            };
+            
+            // Auto-login con utente fake
+            setTimeout(() => {
+                app.onLogin(fakeUser);
+            }, 500);
+            
+            return;
+        }
+
         // Verifica che Supabase sia inizializzato
         if (!window.supabase) {
             console.error('Supabase non inizializzato, riprovo tra 1 secondo...');
@@ -44,6 +68,10 @@ const auth = {
      * Verifica se l'utente è attualmente loggato
      */
     async checkCurrentUser() {
+        if (this.AUTHENTICATION_DISABLED) {
+            return; // Salta la verifica se autenticazione disattivata
+        }
+
         const { data: { session } } = await window.supabase.auth.getSession();
         if (session) {
             app.onLogin(session.user);
@@ -58,6 +86,17 @@ const auth = {
      * @param {string} password - Password dell'utente
      */
     async login(email, password) {
+        if (this.AUTHENTICATION_DISABLED) {
+            // Autenticazione disattivata - accetta qualsiasi credenziale
+            console.log('Autenticazione disattivata - login senza verifica');
+            const demoUser = {
+                id: 'demo-user-' + Date.now(),
+                email: email || 'demo@gestione-ple.local',
+                name: 'Operatore'
+            };
+            return { success: true, user: demoUser };
+        }
+
         // Attendi che Supabase sia disponibile
         if (!window.supabase) {
             console.error('Supabase non inizializzato, riprovo...');
@@ -91,6 +130,13 @@ const auth = {
      * Effettua il logout
      */
     async logout() {
+        if (this.AUTHENTICATION_DISABLED) {
+            // Autenticazione disattivata - logout senza verifica
+            console.log('Logout - autenticazione disattivata');
+            app.onLogout();
+            return { success: true };
+        }
+
         try {
             const { error } = await window.supabase.auth.signOut();
             if (error) {

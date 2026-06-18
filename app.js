@@ -1033,12 +1033,6 @@ Pannelli Termici S.r.l.`;
             deleteBtn.textContent = '🗑️ Annulla e Cancella';
             deleteBtn.onclick = () => this.deleteContract(contractId);
             actionButtonsDiv.appendChild(deleteBtn);
-                returnBtn.id = 'return-btn';
-                returnBtn.className = 'btn btn-warning';
-                returnBtn.textContent = '🔄 Gestisci Rientro';
-                returnBtn.onclick = () => this.showReturnSection(contractId);
-                actionButtonsDiv.appendChild(returnBtn);
-            }
             
             container.appendChild(actionButtonsDiv);
             

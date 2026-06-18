@@ -20,20 +20,28 @@
     <script defer src="pdf-generator.js"></script>
     <script defer src="app.js"></script>
     
-    <!-- Inizializza Supabase e app dopo il caricamento -->
+    <!-- Script per attendere Supabase e inizializzare app -->
     <script defer>
         function initializeApp() {
-            // Inizializza il client Supabase
-            if (window.supabase) {
-                window.supabase = window.supabase.createClient(window.SB_URL, window.SB_KEY);
-                console.log('Supabase inizializzato');
+            console.log('initializeApp() called');
+            
+            // Attendi che Supabase sia caricato
+            if (window.supabase && window.supabase.createClient) {
+                console.log('Supabase SDK trovato');
+                const supabaseClient = window.supabase.createClient(window.SB_URL, window.SB_KEY);
+                window.supabaseClient = supabaseClient;
+                console.log('Supabase client creato:', !!window.supabaseClient);
+            } else {
+                console.warn('Supabase SDK non trovato, continuando comunque...');
             }
             
             // Inizializza l'app
-            if (window.app && window.app.init) {
+            if (window.app && window.app.init && typeof window.app.init === 'function') {
                 console.log('Inizializzazione app...');
-                app.init();
+                window.app.init();
                 console.log('App inizializzata');
+            } else {
+                console.warn('app.init non disponibile');
             }
         }
         
@@ -42,7 +50,7 @@
         
         // Se il DOM è già pronto (in caso di caricamento da cache)
         if (document.readyState !== 'loading') {
-            initializeApp();
+            setTimeout(initializeApp, 100);
         }
     </script>
 </head>

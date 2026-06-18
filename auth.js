@@ -5,10 +5,6 @@
  * ⚠️ NOTA: Autenticazione disattivata - accesso diretto senza credenziali
  */
 
-// Debug: verifica Supabase
-console.log('Auth.js - window.supabase:', window.supabase);
-console.log('Auth.js - window.supabase.auth:', window.supabase?.auth);
-
 const auth = {
     // Flag per disattivare l'autenticazione
     AUTHENTICATION_DISABLED: true,

@@ -47,6 +47,52 @@
     </script>
 </head>
 <body>
+    <!-- Placeholder per app e auth finché gli script non sono caricati -->
+    <script>
+        window.app = window.app || {
+            showSection: function(section) {
+                if (typeof section === 'string') {
+                    console.log('[QUEUED] showSection(' + section + ')');
+                    var self = this;
+                    setTimeout(() => self.showSection(section), 100);
+                } else {
+                    console.error('app not ready');
+                }
+            },
+            handleNewContract: function() {
+                console.log('[QUEUED] handleNewContract()');
+                setTimeout(() => this.handleNewContract(), 100);
+            },
+            handleChecklist: function() {
+                console.log('[QUEUED] handleChecklist()');
+                setTimeout(() => this.handleChecklist(), 100);
+            },
+            setResponse: function(q, response) {
+                console.log('[QUEUED] setResponse(' + q + ', ' + response + ')');
+                setTimeout(() => this.setResponse(q, response), 100);
+            },
+            deleteContract: function(id) {
+                console.log('[QUEUED] deleteContract(' + id + ')');
+                setTimeout(() => this.deleteContract(id), 100);
+            },
+            downloadChecklistPDF: function() {
+                console.log('[QUEUED] downloadChecklistPDF()');
+                setTimeout(() => this.downloadChecklistPDF(), 100);
+            },
+            toggleCustomMezzo: function() {
+                console.log('[QUEUED] toggleCustomMezzo()');
+                setTimeout(() => this.toggleCustomMezzo(), 100);
+            }
+        };
+        
+        window.auth = window.auth || {
+            logout: function() {
+                console.log('[QUEUED] logout()');
+                setTimeout(() => this.logout(), 100);
+            }
+        };
+    </script>
+    
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
